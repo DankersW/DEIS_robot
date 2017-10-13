@@ -1,0 +1,13 @@
+package exlcm;
+
+struct encoder_values_t
+{
+    int64_t left;
+    int64_t right;
+}
+
+struct sensor_vals_t
+{
+    int64_t  timestamp; 
+    encoder_values_t  wheel_encoders;
+}
