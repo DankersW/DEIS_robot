@@ -2,8 +2,8 @@ package exlcm;
 
 struct command_values_t
 {
-    int8_t left;
-    int8_t right;
+    int16_t left;
+    int16_t right;
 }
 
 struct wheel_speeds_t

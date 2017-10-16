@@ -9,8 +9,11 @@ import sys
 import lcm
 import serial
 #data types
-from LCM.exlcm import sensor_vals_t
-from LCM.exlcm import wheel_speeds_t
+
+sys.path.append('../LCM')
+
+from exlcm import sensor_vals_t
+from exlcm import wheel_speeds_t
 
 
 class SerialHandler(object):
@@ -55,7 +58,7 @@ class SerialHandler(object):
         print "Command received on channel ", channel
         msg = wheel_speeds_t.decode(data)
         print "l: ", msg.wheel.left, "\nr: ", msg.wheel.right
-        data = "WHEEL," + str(msg.wheel.left) + "," + str(msg.wheel.right) + "\r\n"
+        data = "drive," + str(msg.wheel.left) + "," + str(msg.wheel.right) + "\r\n"
         self.port.write(data)
 
     def run(self):
@@ -89,8 +92,9 @@ class SerialHandler(object):
         msg = sensor_vals_t()
         msg.timestamp = int(time.time())
         result = [x.strip() for x in line.split(',')]
-        msg.wheel_encoders.left = long(result[1])
-        msg.wheel_encoders.right = long(result[2])
+        if len(result) > 2:
+            msg.wheel_encoders.left = long(result[1])
+            msg.wheel_encoders.right = long(result[2])
         return msg
 
 
@@ -108,5 +112,5 @@ def main():
 
 
 
-sys.path.append('../')
-if  __name__ == '__main__':main()
+if  __name__ == '__main__':
+    main()

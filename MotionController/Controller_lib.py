@@ -24,11 +24,14 @@ def Controller_Output(pose,waypoint,control_param,wheel_base):
     k2 =control_param[1]
     vel_Max = control_param[2]
     stop_Dist = control_param[3]
-
+    #print "stop_Dist: ", stop_Dist
     dX = waypoint[0] - pose.x
     dY = waypoint[1] - pose.y
+    #print "(dx,dy): (" ,dX,dY,")"
+    print "w0,w1 ", waypoint[0] , "", waypoint[1]
+    print "px,py ", pose.x , "", pose.y
     r = math.sqrt(pow(dX, 2) + pow(dY, 2))
-
+    print "r: ", r
     if (r < stop_Dist):
         return 0, 0
 
@@ -45,7 +48,7 @@ def Controller_Output(pose,waypoint,control_param,wheel_base):
     vel_l = vel_lin - omega * wheel_base / 2
     vel_r = 2 * vel_lin - vel_l
 
-    return vel_l, vel_r
+    return vel_l/vel_Max*255, vel_r/vel_Max*255
 
 
 
