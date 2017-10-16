@@ -1,0 +1,13 @@
+package exlcm;
+
+struct command_values_t
+{
+    int8_t left;
+    int8_t right;
+}
+
+struct wheel_speeds_t
+{
+    int64_t  timestamp; 
+    command_values_t  wheel;
+}
