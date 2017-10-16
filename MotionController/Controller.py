@@ -22,8 +22,8 @@ EResol = 192
 
 k1 = 0
 k2 = 2
-Vel_max = 10
-Stop_dist = 2
+Vel_max = 1
+Stop_dist = 20
 subscription = 0
 #ListenThread = 0
 #SendThread = 0
@@ -71,7 +71,7 @@ class MotionController(object):
 
         self.dEr = self.Enc_right - self.Enc_right_old
         self.dEl = self.Enc_left - self.Enc_left_old
-
+        print "enc_l, enc_r",self.Enc_left,"",self.Enc_right
         Update_Pose(self.pos, self.dEr, self.dEl, wheel_dia, EResol, wheel_base)
 
         self.Enc_left_old = self.Enc_left
@@ -127,6 +127,7 @@ class MotionController(object):
 
 def main():
     motion_controller = MotionController(0,0,0)
+    motion_controller.setWaypoint(30,0,0)
     print "motion controller instansiated"
 
 
