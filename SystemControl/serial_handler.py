@@ -107,7 +107,8 @@ def main():
     _ = SerialHandler('/dev/ttyUSB0', 4800)
     print "starting loop"
     while True:
-        pass
+        ##print "knock knock"
+        time.sleep(1)
 
 
 
