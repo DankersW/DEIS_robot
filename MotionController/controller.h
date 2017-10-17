@@ -1,6 +1,8 @@
 #ifndef _CONTROLLER_H_
 #define _CONTROLLER_H_
 
+#define abs(x) (((x)<0) ? -(x) : (x))
+
 typedef struct pos_struct{
     double x;
     double y;
