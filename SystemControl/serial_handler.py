@@ -8,6 +8,7 @@ import sys
 # non-default imports
 import lcm
 import serial
+import select
 #data types
 
 sys.path.append('../LCM')
@@ -15,6 +16,14 @@ sys.path.append('../LCM')
 from exlcm import sensor_vals_t
 from exlcm import wheel_speeds_t
 
+lock = mutex.mutex()
+
+def print2(msg):
+    global lock
+    while not lock.testandset:
+        time.sleep(0)
+    print msg
+    lock.unlock()
 
 class SerialHandler(object):
     """
@@ -45,41 +54,58 @@ class SerialHandler(object):
 
     def poll_lcm(self):
         """
-        TODO: Maybe add a timeout and a sleep
+        TODO: Maybe add a sleep
         """
+        timeout = 0
         while True:
-            self.lcm.handle()
+            rfds,_,_ = select.select([self.lcm.fileno()],[],[],timeout)
+            if rfds:
+                self.lcm.handle()
 
     def command_receiver(self, channel, data):
         """
         Receives messages on LCM Channel COMMAND.
         Parses and sends over uart
         """
-        print "Command received on channel ", channel
         msg = wheel_speeds_t.decode(data)
-        print "l: ", msg.wheel.left, "\nr: ", msg.wheel.right
-        data = "drive," + str(msg.wheel.left) + "," + str(msg.wheel.right) + "\r\n"
+        text = "l: " + str(msg.wheel.left) + "\tr: " +str(msg.wheel.right)
+        print2(text)
+        data = ""
+        if msg.wheel.left == 0.0 and msg.wheel.right == 0.0:
+            data = "stop\r\n"  
+        else:
+            data = "drive," + str(msg.wheel.left) + "," + str(msg.wheel.right) + "\r\n"
+
+        print2("SERIAL SEND:%" + str(data) + "%")
+        self.port.flushOutput()
         self.port.write(data)
 
+        
+        
+            
     def run(self):
         """
         Worker method.
         Will run forever and try to read serial port.
         """
         while True:
-            if self.port.inWaiting():
-                print "Data found"
+            while self.port.inWaiting():
+                #self.print("Data found")
                 #Try to lock mutex
                 while not self.lock.testandset:
-                    time.sleep(1)
+                    time.sleep(0.01)
                 #lock aquired. Read data
                 line = self.port.readline()
+                print2(line)
+                    
                 #self.decode_line()
+                #print line
                 msg = SerialHandler.encode_line(line)
-                print line
-                self.lcm.publish("SENSOR", msg.encode())
-                self.lock.unlock()
-            time.sleep(0.1)
+                    
+                if msg is not None:
+                    self.lcm.publish("SENSOR", msg.encode())
+                    self.lock.unlock()
+            time.sleep(0.01)
 
     #
     @staticmethod
@@ -92,24 +118,25 @@ class SerialHandler(object):
         msg = sensor_vals_t()
         msg.timestamp = int(time.time())
         result = [x.strip() for x in line.split(',')]
-        if len(result) > 2:
+        #print result[0]
+        if result[0] == ("ALL") and len(result) > 2:
             msg.wheel_encoders.left = long(result[1])
             msg.wheel_encoders.right = long(result[2])
-        return msg
+            return msg
+        return None
 
 
 def main():
     """
     Module test code
     """
-
+        
     # Starting background thread
-    _ = SerialHandler('/dev/ttyUSB0', 4800)
-    print "starting loop"
+    _ = SerialHandler('/dev/ttyUSB1', 19200)
+    print2("starting loop")
     while True:
-        ##print "knock knock"
+        #print "knock knock"
         time.sleep(1)
-
 
 
 if  __name__ == '__main__':
