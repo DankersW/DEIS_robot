@@ -10,26 +10,54 @@ typedef struct pos_struct{
 typedef struct encoder {
     double right;
     double left;
+
+    struct encoder operator+(struct encoder other){
+        other.right += right;
+        other.left  += left;
+        return other;
+    }
 } encoder_t;
  
 class Controller {
 
 public:
-    static const double wheel_base = 18; //cm
-    static const double dia        = 3 ; //cm
-    static const double EResol     = 8084.21;
-    static const double k1 = 0;
-    static const double k2 = 2;
-    double Vel_lin = 0;
-    double Vel_max = 10;
+    /**
+     * Static constants
+     */
+    static constexpr double WHEEL_BASE      = 18; //cm
+    static constexpr double WHEEL_DIAMETER  = 3 ; //cm
+    static constexpr double ERESOL          = 8084.21;
+    static constexpr double K1              = 0;
+    static constexpr double K2              = 2;
+    static const int        ENCODER_MAX     = 0X7ff;
+    
+    double vel_lin = 0;
+    double vel_max = 10;
     static const int CHANNEL = 1;
-    //Controller();
-    Controller(pos_t start = {0}, encoder_t encoders);
+    
+    
+    /**
+     *  
+     */
+    Controller(pos_t start = {0}, encoder_t encoders = {0});
     void updatePosition(encoder_t encoder_deltas);
+    void updateEncoders(encoder_t encoder_deltas);
+    void update(encoder_t encoder_new);
 
 private:
     pos_t position;
     encoder_t encoders;
+    encoder_t reading;
+    encoder_t velocity;
+
+    double ego_cosys_ang = 0;
+    double ego_delta = 0;
+    double ego_theta = 0;
+    double kappa = 0;
+    double omega = 0;
+    double d_x = 0;
+    double d_y = 0;
+    double r = 0;
 };
 
 #endif
