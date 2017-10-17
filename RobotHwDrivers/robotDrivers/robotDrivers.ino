@@ -39,9 +39,11 @@ void loop() {
   encoder_t vals;
   vals.left = encoder.getTicks(LEFT);
   vals.right = encoder.getTicks(RIGHT);
-  
- controller.update(vals);
- Serial.println("left V: " + String(controller.velocity.left) + " Right V: " + String(controller.velocity.right));
+  encoder_t velocity = controller.update(vals);
+ Serial.println("\tleft V: " + String(velocity.left) + "\tRight V: " + String(velocity.right));
+
+ int intaWheelSpeed[2] = {int(velocity.left), int(velocity.right)};
+  driveWheels(intaWheelSpeed);
   
 }
 
@@ -67,6 +69,39 @@ void sendSensorData(){
   Serial.flush();
   Serial.println(output);
 }
+
+void driveWheels(int v[2]){
+  // v[0] = leftWheel     v[1] = rightWheel
+  leftWheel(v[0]);
+  rightWheel(v[1]);
+}
+
+void leftWheel(int motorPower){
+    motorPower = constrain(motorPower, -255, 255);   // constrain motorPower to -255 to +255
+    if(motorPower <= 0){ // spin CCW
+        digitalWrite(L_CTRL1, HIGH);
+        digitalWrite(L_CTRL2, LOW);
+        analogWrite(L_PWM, abs(motorPower));
+    }else{ // spin CW
+        digitalWrite(L_CTRL1, LOW);
+        digitalWrite(L_CTRL2, HIGH);
+        analogWrite(L_PWM, abs(motorPower));
+    }
+}
+
+void rightWheel(int motorPower){
+    motorPower = constrain(motorPower, -255, 255);   // constrain motorPower to -255 to +255
+    if(motorPower <= 0){  // spin CCW
+        digitalWrite(R_CTRL1, HIGH);
+        digitalWrite(R_CTRL2, LOW);
+        analogWrite(R_PWM, abs(motorPower));
+    }else{ // spin CW
+        digitalWrite(R_CTRL1, LOW);
+        digitalWrite(R_CTRL2, HIGH);
+        analogWrite(R_PWM, abs(motorPower));
+    }
+}
+
 
 void getEncoderValues(int r[2]){
   // saves the encoder values into the array of the arugment r[0]=LeftWheel   r[1]=RightWheel
