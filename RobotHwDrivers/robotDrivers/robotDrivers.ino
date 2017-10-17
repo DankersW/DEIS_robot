@@ -2,15 +2,21 @@
 #include "command.h"
 #include "command_factory.h"
 #include "pin_header.h"
+#include "controller.h"
+
 
 RedBotEncoder encoder = RedBotEncoder(A2, 10);  // initializes encoder on pins A2 and 10
 RedBotSensor IRSensor0 = RedBotSensor(A3); // initialize a IRsensor object on A3 ~left
 RedBotSensor IRSensor1 = RedBotSensor(A6); // initialize a IRsensor object on A6 ~middle
 RedBotSensor IRSensor2 = RedBotSensor(A7); // initialize a IRsensor object on A7 ~right 
 
+Controller controller = Controller();
+
 void setup() {
   Serial.begin(9600);
   Serial.setTimeout(0);
+
+  Serial.print("dde");
 
   pinMode(12, INPUT_PULLUP); //onboard button
   
@@ -29,7 +35,14 @@ void setup() {
 
 void loop() {
   //sendSensorData();
-  checkReceivedCommand();
+  //checkReceivedCommand();
+  encoder_t vals;
+  vals.left = encoder.getTicks(LEFT);
+  vals.right = encoder.getTicks(RIGHT);
+  
+ controller.update(vals);
+ Serial.println("left V: " + String(controller.velocity.left) + " Right V: " + String(controller.velocity.right));
+  
 }
 
 void checkReceivedCommand(){
