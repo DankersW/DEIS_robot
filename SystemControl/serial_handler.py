@@ -5,6 +5,7 @@ import threading
 import time
 import mutex
 import sys
+import select
 # non-default imports
 import lcm
 import serial
@@ -45,10 +46,14 @@ class SerialHandler(object):
 
     def poll_lcm(self):
         """
-        TODO: Maybe add a timeout and a sleep
+        TODO: Maybe add a sleep
         """
+        timeout = 0
         while True:
-            self.lcm.handle()
+            rfds,_,_ = select.select([self.lcm.fileno()], [], [], timeout)
+            if rfds:
+                self.lcm.handle()
+            time.sleep(0)
 
     def command_receiver(self, channel, data):
         """
@@ -71,19 +76,19 @@ class SerialHandler(object):
                 print "Data found"
                 #Try to lock mutex
                 while not self.lock.testandset:
-                    time.sleep(1)
+                    time.sleep(0.01)
                 #lock aquired. Read data
                 line = self.port.readline()
-                #self.decode_line()
-                msg = SerialHandler.encode_line(line)
-                print line
-                self.lcm.publish("SENSOR", msg.encode())
+                msg = SerialHandler.parse_line(line)
+                if msg is not None:
+                    #print line
+                    self.lcm.publish("SENSOR", msg.encode())
                 self.lock.unlock()
             time.sleep(0.1)
 
     #
     @staticmethod
-    def encode_line(line=""):
+    def parse_line(line=""):
         """
         Static method.
         takes a string of values and encodes into sensor_values_t type
@@ -92,10 +97,20 @@ class SerialHandler(object):
         msg = sensor_vals_t()
         msg.timestamp = int(time.time())
         result = [x.strip() for x in line.split(',')]
-        if len(result) > 2:
+
+        if len(result) > 2 and result[0] == "ALL":
             msg.wheel_encoders.left = long(result[1])
             msg.wheel_encoders.right = long(result[2])
-        return msg
+            msg.line_sensors.left = result[3]
+            msg.line_sensors.middle = result[4]
+            msg.line_sensors.right = result[5]
+            return msg
+
+        if len(result) > 1 and result[0] == "DEBUG":
+            print result[1]
+        return None
+
+
 
 
 def main():

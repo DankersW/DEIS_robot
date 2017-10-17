@@ -11,12 +11,15 @@ import struct
 
 import exlcm.encoder_values_t
 
+import exlcm.line_sensors_t
+
 class sensor_vals_t(object):
-    __slots__ = ["timestamp", "wheel_encoders"]
+    __slots__ = ["timestamp", "wheel_encoders", "line_sensors"]
 
     def __init__(self):
         self.timestamp = 0
         self.wheel_encoders = exlcm.encoder_values_t()
+        self.line_sensors = exlcm.line_sensors_t()
 
     def encode(self):
         buf = BytesIO()
@@ -28,6 +31,8 @@ class sensor_vals_t(object):
         buf.write(struct.pack(">q", self.timestamp))
         assert self.wheel_encoders._get_packed_fingerprint() == exlcm.encoder_values_t._get_packed_fingerprint()
         self.wheel_encoders._encode_one(buf)
+        assert self.line_sensors._get_packed_fingerprint() == exlcm.line_sensors_t._get_packed_fingerprint()
+        self.line_sensors._encode_one(buf)
 
     def decode(data):
         if hasattr(data, 'read'):
@@ -43,6 +48,7 @@ class sensor_vals_t(object):
         self = sensor_vals_t()
         self.timestamp = struct.unpack(">q", buf.read(8))[0]
         self.wheel_encoders = exlcm.encoder_values_t._decode_one(buf)
+        self.line_sensors = exlcm.line_sensors_t._decode_one(buf)
         return self
     _decode_one = staticmethod(_decode_one)
 
@@ -50,7 +56,7 @@ class sensor_vals_t(object):
     def _get_hash_recursive(parents):
         if sensor_vals_t in parents: return 0
         newparents = parents + [sensor_vals_t]
-        tmphash = (0x7a8550fd2f1bd89b+ exlcm.encoder_values_t._get_hash_recursive(newparents)) & 0xffffffffffffffff
+        tmphash = (0x252b9586e2409a2b+ exlcm.encoder_values_t._get_hash_recursive(newparents)+ exlcm.line_sensors_t._get_hash_recursive(newparents)) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff)  + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)
