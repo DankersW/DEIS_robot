@@ -16,6 +16,12 @@ typedef struct encoder {
         other.left  += left;
         return other;
     }
+
+    struct encoder operator-(struct encoder other){
+        other.right -= right;
+        other.left  -= left;
+        return other;
+    }
 } encoder_t;
  
 class Controller {
@@ -34,6 +40,7 @@ public:
     double vel_lin = 0;
     double vel_max = 10;
     static const int CHANNEL = 1;
+    pos_t waypoint;
     
     
     /**
@@ -42,7 +49,7 @@ public:
     Controller(pos_t start = {0}, encoder_t encoders = {0});
     void updatePosition(encoder_t encoder_deltas);
     void updateEncoders(encoder_t encoder_deltas);
-    void update(encoder_t encoder_new);
+    encoder_t update(encoder_t encoder_new);
 
 private:
     pos_t position;
