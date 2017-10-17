@@ -5,6 +5,7 @@ import threading
 import time
 import mutex
 import sys
+import select
 # non-default imports
 import lcm
 import serial
@@ -58,9 +59,10 @@ class SerialHandler(object):
         """
         timeout = 0
         while True:
-            rfds,_,_ = select.select([self.lcm.fileno()],[],[],timeout)
+            rfds,_,_ = select.select([self.lcm.fileno()], [], [], timeout)
             if rfds:
                 self.lcm.handle()
+            time.sleep(0)
 
     def command_receiver(self, channel, data):
         """
@@ -96,20 +98,16 @@ class SerialHandler(object):
                     time.sleep(0.01)
                 #lock aquired. Read data
                 line = self.port.readline()
-                print2(line)
-                    
-                #self.decode_line()
-                #print line
-                msg = SerialHandler.encode_line(line)
-                    
+                msg = SerialHandler.parse_line(line)
                 if msg is not None:
+                    #print line
                     self.lcm.publish("SENSOR", msg.encode())
-                    self.lock.unlock()
-            time.sleep(0.01)
+                self.lock.unlock()
+            time.sleep(0.1)
 
     #
     @staticmethod
-    def encode_line(line=""):
+    def parse_line(line=""):
         """
         Static method.
         takes a string of values and encodes into sensor_values_t type
@@ -118,12 +116,20 @@ class SerialHandler(object):
         msg = sensor_vals_t()
         msg.timestamp = int(time.time())
         result = [x.strip() for x in line.split(',')]
-        #print result[0]
-        if result[0] == ("ALL") and len(result) > 2:
+
+        if len(result) > 2 and result[0] == "ALL":
             msg.wheel_encoders.left = long(result[1])
             msg.wheel_encoders.right = long(result[2])
+            msg.line_sensors.left = result[3]
+            msg.line_sensors.middle = result[4]
+            msg.line_sensors.right = result[5]
             return msg
+
+        if len(result) > 1 and result[0] == "DEBUG":
+            print result[1]
         return None
+
+
 
 
 def main():
