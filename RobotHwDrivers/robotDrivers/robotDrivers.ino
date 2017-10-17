@@ -28,16 +28,14 @@ void setup() {
 }
 
 void loop() {
-  sendSensorData();
+  //sendSensorData();
   checkReceivedCommand();
 }
 
 void checkReceivedCommand(){
   Command *cmd;
   while(Serial.available()) {
-    //delay(5);
-    //String lineInput = Serial.readStringUntil('\n');
-    String lineInput = Serial.readString(); // read the incoming data as string
+    String lineInput = Serial.readString(); 
     Serial.println("DEBUG,LineInput: |" + String(lineInput) + "|");
     cmd = CommandCreator::parse(lineInput);
     cmd->execute();
@@ -51,7 +49,6 @@ void sendSensorData(){
   int irValues[3] = {0};
   getEncoderValues(encoder);
   getIRvalues(irValues);
-
 
   String output = "All," + String(encoder[0]) + "," + String(encoder[1]) + ","  + String(irValues[0]) + "," + String(irValues[1]) + "," + String(irValues[2]) ;
   Serial.flush();
