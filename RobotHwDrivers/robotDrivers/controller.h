@@ -9,6 +9,12 @@ typedef struct pos_struct{
     double theta;
 } pos_t;
 
+typedef struct line_sensors{
+    int left;
+    int middle;
+    int right;
+} line_sensors_t;
+
 typedef struct encoder {
     double right;
     double left;
@@ -20,9 +26,7 @@ typedef struct encoder {
     }
 
     struct encoder operator-(struct encoder other){
-        other.right -= right;
-        other.left  -= left;
-        return other;
+        return {right-other.right,left-other.left};
     }
 } encoder_t;
  
@@ -40,7 +44,7 @@ public:
     static const int        ENCODER_MAX     = 0X7ff;
     
     double vel_lin = 0;
-    double vel_max = 10;
+    double vel_max = 2;
     static const int CHANNEL = 1;
     pos_t waypoint;
     
@@ -52,13 +56,15 @@ public:
     void updatePosition(encoder_t encoder_deltas);
     void updateEncoders(encoder_t encoder_deltas);
     encoder_t update(encoder_t encoder_new);
+    void updateLineSensors(line_sensors_t line_sensors);
 
 private:
     pos_t position;
     encoder_t encoders;
     encoder_t reading;
     encoder_t velocity;
-
+    float Ielines[3] = {0}; 
+    line_sensors_t line_sensors = {0};
     double ego_cosys_ang = 0;
     double ego_delta = 0;
     double ego_theta = 0;

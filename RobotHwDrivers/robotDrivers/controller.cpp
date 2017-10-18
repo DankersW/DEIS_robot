@@ -16,8 +16,10 @@ Controller::Controller(pos_t start, encoder_t encoders)
     : position(start)
     , encoders(encoders) {
       velocity = {0};
+    
     waypoint = {0};
-    waypoint.x = -40;
+    waypoint.x += 200;// 10*cos(position.theta) ;
+    //waypoint.y += 10*sin(position.theta) ;
 }
 
 void Controller::updatePosition(encoder_t encoder_deltas){
@@ -39,7 +41,7 @@ void Controller::updatePosition(encoder_t encoder_deltas){
                                       (double(encoder_deltas.left)/ Controller::ERESOL);
     double d_c            = (d_r + d_l)/2;
     double theta_change   = (d_r - d_l)/Controller::WHEEL_BASE;
-
+    Serial.print("\tpxd: " + String(cos(position.theta + (theta_change/2))) + "\tdr: " + String(d_r));
     position.x     += d_c * cos(position.theta + (theta_change/2));
     position.y     += d_c * sin(position.theta + (theta_change/2));
     position.theta += theta_change;
@@ -70,8 +72,18 @@ void Controller::updateEncoders(encoder_t encoder_deltas){
     return;
 }
 
+
+void Controller::updateLineSensors(line_sensors_t line_sensors_new){
+
+  line_sensors.left   = line_sensors_new.left;
+  line_sensors.middle = line_sensors_new.middle;
+  line_sensors.right  = line_sensors_new.right;
+    
+}
+
 encoder_t Controller::update(encoder_t encoder_new){
     //dX= position.x-100
+    //static int iControllerCounter = 0;
 /**
  * 
  * global wheel_dia
@@ -122,8 +134,23 @@ k1 =control_param[0]
     vel_r = 2 * vel_lin - vel_l
   
     return vel_l/vel_Max*255/2, vel_r/vel_Max*255/2
-*/
+*/  /*iControllerCounter++;
+    if(iControllerCounter == 3) iControllerCounter = 0;
+    
+    float drl = float(line_sensors.left-line_sensors.right);
+    float dlines = float(line_sensors.left+line_sensors.middle+line_sensors.right);
+    Ielines[iControllerCounter] = Sign(drl)*dlines;
 
+    float sumIelines = 0;
+    for(auto i: Ielines)sumIelines+=i;
+    
+    float dthetaline = Sign(drl)*dlines/3000*M_PI/2*0.5 + 0.05 * sumIelines/3000*M_PI/2;
+    
+    Serial.print("DThetaLine: " + String(dthetaline));
+    
+    waypoint.x = position.x + 20*cos(position.theta+dthetaline) ;
+    waypoint.y = position.y + 20*sin(position.theta+dthetaline) ;
+    */
     d_x = waypoint.x - position.x;
     d_y = waypoint.y - position.y;
           
@@ -134,11 +161,21 @@ k1 =control_param[0]
     
     r = sqrt(pow(d_x, 2) + pow(d_y, 2));
 
+
+    
+    if (r < 6){
+      //waypoint.x = 100;
+      //waypoint.y = 0;
+      if (r<3){
+        return {0};
+      }
+    }
+
     Serial.print("R: " + String(r) + "\tDx: " + String(d_x)+ "\tDy: " + String(d_y));
       
     kappa = -1/r*(Controller::K2*(ego_delta-atan(-Controller::K1*ego_theta))+
        (1+Controller::K1/(1+(Controller::K1*pow(ego_theta,2))))*sin(ego_delta));
-    vel_lin = vel_max/(1+10*abs(pow(kappa,2)));
+    vel_lin = vel_max/(1+30*abs(pow(kappa,2)));
     omega = vel_lin*kappa;
     encoder_t deltas = encoder_new - encoders;
     //deltas.left = 
@@ -153,8 +190,8 @@ k1 =control_param[0]
     encoders.right = encoder_new.right;
     encoders.left = encoder_new.left;
     encoder_t ret_vel;
-    ret_vel.left  = velocity.left/vel_max*255/2;
-    ret_vel.right = velocity.right/vel_max*255/2;
+    ret_vel.left  = max(velocity.left/vel_max*255/4,0);
+    ret_vel.right = max(velocity.right/vel_max*255/4,0);
     return ret_vel;
 }
 

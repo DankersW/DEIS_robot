@@ -2,6 +2,7 @@
 #include "cmd_stop.h"
 #include "cmd_scoop.h"
 #include "cmd_drive.h"
+#include "cmd_linefollow.h"
 
 Command *CommandCreator::parse(String line){
   int i;
@@ -37,6 +38,9 @@ Command *CommandCreator::parse(String line){
   }
   else if(type == "scoop"){
     return new CommandScoop(args);
+  }
+  else if(type == "linefollow"){
+    return new CommandLinefollow(args);
   }
   else{
     return new Command();

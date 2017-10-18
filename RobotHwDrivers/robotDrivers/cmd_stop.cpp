@@ -13,24 +13,24 @@ CommandStop::CommandStop(int *args)
 void CommandStop::execute(){
   Serial.println("DEBUG,Stopping");
   stopWheels();
-  while (1==1){
-    asm("nop");
-  }
+  //while (1==1){
+    //asm("nop");
+  //}
 }
 
-void stopWheels(){
+static void stopWheels(){
   leftWheelBreak();
   rightWheelBreak();
 }
 
-void leftWheelBreak(){
+static void leftWheelBreak(){
     // setting both controls HIGH, shorts the motor out -- causing it to self brake.
     digitalWrite(L_CTRL1, HIGH);
     digitalWrite(L_CTRL2, HIGH);
     analogWrite(L_PWM, 0);
 }
 
-void rightWheelBreak(){  
+static void rightWheelBreak(){  
     // setting both controls HIGH, shorts the motor out -- causing it to self brake.
     digitalWrite(L_CTRL1, HIGH);
     digitalWrite(L_CTRL2, HIGH);
