@@ -1,8 +1,9 @@
 #include "cmd_stop.h"
 #include "pin_header.h"
-void stopWheels();
-void leftWheelBreak();
-void rightWheelBreak();
+
+static void stopWheels();
+static void leftWheelBreak();
+static void rightWheelBreak();
 
 
 CommandStop::CommandStop(int *args)

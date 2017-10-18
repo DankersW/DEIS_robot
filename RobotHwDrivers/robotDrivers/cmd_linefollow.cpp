@@ -19,8 +19,9 @@ CommandLinefollow::CommandLinefollow(int *args)
 void CommandLinefollow::execute(){
   int V_left; 
   int V_right;
+  //int intaWheelSpeed[2] = {0,0};
+  int irValues[3] = {0};
   while (!Serial.available()){
-    int irValues[3] = {0};
     getIRvalues(irValues);
 
     if(irValues[0] > LINETHRESHOLD){ //left
@@ -35,11 +36,6 @@ void CommandLinefollow::execute(){
       V_left  = SPEED + 50;
       V_right = SPEED;
     }
-    
-
-    delay(0);  // add a delay to decrease sensitivity.
-    
-    //Serial.println("IR: " + String(irValues[0]) + "," + String(irValues[1]) + "," + String(irValues[2]));
     
     int intaWheelSpeed[2] = {V_left,V_right};
     driveWheels(intaWheelSpeed);

@@ -3,6 +3,7 @@
 #include "cmd_scoop.h"
 #include "cmd_drive.h"
 #include "cmd_linefollow.h"
+#include "cmd_drivestraight.h"
 
 Command *CommandCreator::parse(String line){
   int i;
@@ -27,8 +28,6 @@ Command *CommandCreator::parse(String line){
   }
   args[index++] = (line.toInt());
 
-
-
   // Add new Command types here
   if(type == "drive"){
     return new CommandDrive(args);
@@ -41,6 +40,9 @@ Command *CommandCreator::parse(String line){
   }
   else if(type == "linefollow"){
     return new CommandLinefollow(args);
+  }
+  else if(type == "drivestraight"){
+    return new CommandDriveStraight(args);
   }
   else{
     return new Command();
