@@ -3,7 +3,9 @@
 #include "cmd_scoop.h"
 #include "cmd_drive.h"
 #include "cmd_linefollow.h"
-#include "cmd_drivestraight.h"
+#include "cmd_drivestraightodo.h"
+#include "cmd_drivegps.h"
+#include "cmd_gps.h"
 
 Command *CommandCreator::parse(String line){
   int i;
@@ -41,8 +43,14 @@ Command *CommandCreator::parse(String line){
   else if(type == "linefollow"){
     return new CommandLinefollow(args);
   }
-  else if(type == "drivestraight"){
-    return new CommandDriveStraight(args);
+  else if(type == "drivestraightodo"){
+    return new CommandDriveStraightOdo(args);
+  }
+  else if(type == "drivegps"){
+    return new CommandDriveGps(args);
+  }
+  else if(type == "gps"){
+    return new CommandGPS(args);
   }
   else{
     return new Command();

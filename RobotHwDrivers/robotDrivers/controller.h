@@ -13,7 +13,16 @@ typedef struct line_sensors{
     int left;
     int middle;
     int right;
+
+    struct line_sensors operator=(struct line_sensors o){
+      return o;  
+    };
 } line_sensors_t;
+
+typedef struct cmd_input{
+  int speedOg;
+  int distance;
+} cmd_input_t;
 
 typedef struct encoder {
     double right;
@@ -33,9 +42,6 @@ typedef struct encoder {
 class Controller {
 
 public:
-    /**
-     * Static constants
-     */
     static constexpr double WHEEL_BASE      = 18; //cm
     static constexpr double WHEEL_DIAMETER  = 6.5 ; //cm
     static constexpr double ERESOL          = 192;
@@ -47,22 +53,22 @@ public:
     double vel_max = 2;
     static const int CHANNEL = 1;
     pos_t waypoint;
+    //cmd_input_t cmd_input = {0};
     
-    
-    /**
-     *  
-     */
     Controller(pos_t start = {0}, encoder_t encoders = {0});
     void updatePosition(encoder_t encoder_deltas);
     void updateEncoders(encoder_t encoder_deltas);
     encoder_t update(encoder_t encoder_new);
     void updateLineSensors(line_sensors_t line_sensors);
+    void setWaypoint(cmd_input_t i);
 
 private:
     pos_t position;
     encoder_t encoders;
     encoder_t reading;
     encoder_t velocity;
+    
+    
     float Ielines[3] = {0}; 
     line_sensors_t line_sensors = {0};
     double ego_cosys_ang = 0;

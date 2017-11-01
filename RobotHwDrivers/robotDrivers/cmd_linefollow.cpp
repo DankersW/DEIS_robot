@@ -7,9 +7,9 @@ static void leftWheel(int motorPower);
 static void rightWheel(int motorPower);
 static void getIRvalues(int r[3]);
 
-RedBotSensor IRSensor0 = RedBotSensor(A3); // initialize a IRsensor object on A3 ~left
-RedBotSensor IRSensor1 = RedBotSensor(A6); // initialize a IRsensor object on A6 ~middle
-RedBotSensor IRSensor2 = RedBotSensor(A7); // initialize a IRsensor object on A7 ~right
+//RedBotSensor IRSensor0 = RedBotSensor(A3); // initialize a IRsensor object on A3 ~left
+//RedBotSensor IRSensor1 = RedBotSensor(A6); // initialize a IRsensor object on A6 ~middle
+//RedBotSensor IRSensor2 = RedBotSensor(A7); // initialize a IRsensor object on A7 ~right
 
 CommandLinefollow::CommandLinefollow(int *args)
 {
@@ -26,14 +26,14 @@ void CommandLinefollow::execute(){
 
     if(irValues[0] > LINETHRESHOLD){ //left
       V_left  = SPEED;
-      V_right = SPEED + 50;
+      V_right = SPEED + SPEED;
     }
     else if(irValues[1] > LINETHRESHOLD){ //middle
       V_left  = SPEED; 
       V_right = SPEED;
     }
     else if(irValues[2] > LINETHRESHOLD){ //right
-      V_left  = SPEED + 50;
+      V_left  = SPEED + SPEED;
       V_right = SPEED;
     }
     

@@ -5,8 +5,7 @@ static void driveWheels(int v[2]);
 static void leftWheel(int motorPower);
 static void rightWheel(int motorPower);
 
-CommandDrive::CommandDrive(int *args)
-{
+CommandDrive::CommandDrive(int *args){
   left = args[0];
   right = args[1];
 }

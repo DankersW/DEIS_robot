@@ -1,16 +1,26 @@
 #include "controller.h"
 #include "math.h"
 
-static int Sign(double Val) { return (Val > 0) ? 1 : ((Val < 0) ? -1 : 0); }
+static inline int Sign(double Val) { return (Val > 0) ? 1 : ((Val < 0) ? -1 : 0); }
 static double AngDiff(double A1, double A2){ return (A1-A2) + ((A1-A2) < -M_PI)*(2*M_PI) + ((A1-A2) > M_PI)*(-2*M_PI);} //roll-over
 
 Controller::Controller(pos_t start, encoder_t encoders)
     : position(start)
     , encoders(encoders) {
       velocity = {0};
+
+    
     
     waypoint = {0};
-    waypoint.x += 200;// 10*cos(position.theta) ;
+    //waypoint.x += cmd_input.distance;// 10*cos(position.theta) ;
+    //waypoint.y += 10*sin(position.theta) ;
+}
+
+
+void Controller::setWaypoint(cmd_input_t i){
+  Serial.println("Distance \t: " + String(i.distance));
+  
+    waypoint.x += i.distance;// 10*cos(position.theta) ;
     //waypoint.y += 10*sin(position.theta) ;
 }
 
@@ -53,15 +63,15 @@ void Controller::updateLineSensors(line_sensors_t line_sensors_new){
 }
 
 encoder_t Controller::update(encoder_t encoder_new){
-  int inmiddle = 1;
-  if(line_sensors.middle > 800) 
-    inmiddle = 0;
-    float dlines = float(line_sensors.left - line_sensors.right);
-    float dthetaline = inmiddle*dlines/1000 * M_PI/2;   
-    Serial.print("DThetaLine: " + String(dthetaline));
+  //int inmiddle = 1;
+  //if(line_sensors.middle > 800) 
+    //inmiddle = 0;
+    //float dlines = float(line_sensors.left - line_sensors.right);
+    //float dthetaline = inmiddle*dlines/1000 * M_PI/2;   
+    //Serial.print("DThetaLine: " + String(dthetaline));
     
-    waypoint.x = position.x + 10*cos(position.theta+dthetaline) ;
-    waypoint.y = position.y + 10*sin(position.theta+dthetaline) ;
+    //waypoint.x = position.x + 10*cos(position.theta+dthetaline) ;
+    //waypoint.y = position.y + 10*sin(position.theta+dthetaline) ;
     
     d_x = waypoint.x - position.x;
     d_y = waypoint.y - position.y;
@@ -94,7 +104,10 @@ encoder_t Controller::update(encoder_t encoder_new){
     encoders.right = encoder_new.right;
     encoders.left = encoder_new.left;
     encoder_t ret_vel;
-    ret_vel.left  = max(velocity.left/vel_max*255/4,0);
-    ret_vel.right = max(velocity.right/vel_max*255/4,0);
+
+    //Serial.println("SPEED: " + String(cmd_input.speedOg));
+    
+    ret_vel.left  = max(velocity.left/vel_max*255/2,0);
+    ret_vel.right = max(velocity.right/vel_max*255/2,0);
     return ret_vel;
 }
