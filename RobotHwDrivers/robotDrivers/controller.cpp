@@ -6,22 +6,22 @@ static double AngDiff(double A1, double A2){ return (A1-A2) + ((A1-A2) < -M_PI)*
 
 Controller::Controller(pos_t start, encoder_t encoders)
     : position(start)
-    , encoders(encoders) {
-      velocity = {0};
+    , encoders(encoders)
+	, state(IDLE) {
 
-    
-    
+    velocity = {0};
     waypoint = {0};
-    //waypoint.x += cmd_input.distance;// 10*cos(position.theta) ;
-    //waypoint.y += 10*sin(position.theta) ;
 }
-
 
 void Controller::setWaypoint(cmd_input_t i){
   Serial.println("Distance \t: " + String(i.distance));
   
     waypoint.x += i.distance;// 10*cos(position.theta) ;
     //waypoint.y += 10*sin(position.theta) ;
+}
+
+void Controller::updateGPS(pos_t gps_pos){
+	position = gps_pos;
 }
 
 void Controller::updatePosition(encoder_t encoder_deltas){
@@ -36,7 +36,7 @@ void Controller::updatePosition(encoder_t encoder_deltas){
     position.theta += theta_change;
 }
 
-//check for an overflow
+//check for overflow
 void Controller::updateEncoders(encoder_t encoder_deltas){
   static double pos_r = 0;
   static double pos_l = 0;
@@ -56,23 +56,22 @@ void Controller::updateEncoders(encoder_t encoder_deltas){
   return;
 }
 
-void Controller::updateLineSensors(line_sensors_t line_sensors_new){
-  line_sensors.left   = line_sensors_new.left;
-  line_sensors.middle = line_sensors_new.middle;
-  line_sensors.right  = line_sensors_new.right;   
+encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors){
+	encoder_t deltas = encoder_new - encoders;
+    updatePosition(deltas);
+	
+	// TODO: Implementing a proper state machine using inheritance would be more neat
+	switch(state){
+	case IDLE:
+		break;
+	case WAYPOINT_FOLLOW:
+		return waypointFollow(encoder_new, line_sensors);
+	case LINE_FOLLOW:
+		return lineFollow(line_sensors);
+	}
 }
 
-encoder_t Controller::update(encoder_t encoder_new){
-  //int inmiddle = 1;
-  //if(line_sensors.middle > 800) 
-    //inmiddle = 0;
-    //float dlines = float(line_sensors.left - line_sensors.right);
-    //float dthetaline = inmiddle*dlines/1000 * M_PI/2;   
-    //Serial.print("DThetaLine: " + String(dthetaline));
-    
-    //waypoint.x = position.x + 10*cos(position.theta+dthetaline) ;
-    //waypoint.y = position.y + 10*sin(position.theta+dthetaline) ;
-    
+encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors){
     d_x = waypoint.x - position.x;
     d_y = waypoint.y - position.y;
           
@@ -95,19 +94,71 @@ encoder_t Controller::update(encoder_t encoder_new){
     kappa = -1/r*(Controller::K2*(ego_delta-atan(-Controller::K1*ego_theta))+ (1+Controller::K1/(1+(Controller::K1*pow(ego_theta,2))))*sin(ego_delta));
     vel_lin = vel_max/(1+10*abs(pow(kappa,2)));
     omega = vel_lin*kappa;
-    encoder_t deltas = encoder_new - encoders;
+	
     velocity.left = vel_lin-omega*Controller::WHEEL_BASE/2;
     velocity.right = 2*vel_lin-velocity.left;
-
-    this->updatePosition(deltas);
 
     encoders.right = encoder_new.right;
     encoders.left = encoder_new.left;
     encoder_t ret_vel;
 
-    //Serial.println("SPEED: " + String(cmd_input.speedOg));
-    
     ret_vel.left  = max(velocity.left/vel_max*255/2,0);
     ret_vel.right = max(velocity.right/vel_max*255/2,0);
     return ret_vel;
 }
+
+/************************************************************************/
+/* Starts line follow mode. Will try to drive at a set speed            */
+/************************************************************************/
+void Controller::startLineFollow(int speed){
+	target_speed = speed;
+	state = LINE_FOLLOW;
+}
+
+/************************************************************************/
+/* Linefollow. Will be called repeatedly when in linefollow state       */
+/************************************************************************/
+encoder_t Controller::lineFollow(line_sensors_t sensor){
+	int16_t v_left;
+	int16_t v_right;
+	
+	if(sensor.left > LINETHRESHOLD){ //left
+		v_left  = target_speed;
+		v_right = target_speed + target_speed;
+	}
+	else if(sensor.middle > LINETHRESHOLD){ //middle
+		v_left  = target_speed;
+		v_right = target_speed;
+	}
+	else if(sensor.right > LINETHRESHOLD){ //right
+		v_left  = target_speed + target_speed;
+		v_right = target_speed;
+	}
+		
+	encoder_t ret_vel = {v_left, v_right};
+	return ret_vel;
+}
+
+//encoder_t Controller::driveGPS(){
+//	float dx = position.x - waypoint.x;
+//	float dy = position.y - waypoint.y;
+//	float r = sqrt(pow(dx,2) + pow(dy,2));
+//
+//	 if(r > distance){
+//		 cmd = "stop";
+//	 }
+//
+//}
+
+/************************************************************************/
+/* Only drives on fused position                                        */
+/************************************************************************/
+void Controller::driveSetDistance(uint32_t mm){
+	
+	waypoint.y = position.y + mm*sin(position.theta);
+	waypoint.x = position.x + mm*cos(position.theta);
+	state = WAYPOINT_FOLLOW;
+
+}
+
+Controller controller = Controller();

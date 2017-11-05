@@ -1,5 +1,5 @@
 #include "cmd_gps.h"
-#include "controller.h"
+#include "../controller.h"
 
 //extern int pos_x;
 //extern int pos_y;

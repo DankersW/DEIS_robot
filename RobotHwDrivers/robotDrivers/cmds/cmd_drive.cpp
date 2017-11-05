@@ -1,5 +1,5 @@
 #include "cmd_drive.h"
-#include "robot.h"
+#include "../robot.h"
 
 CommandDrive::CommandDrive(int *args){
   left = args[0];
@@ -8,7 +8,6 @@ CommandDrive::CommandDrive(int *args){
 
 void CommandDrive::execute(){
 	Serial.println("DEBUG,Wheel speed\tLeft: " + String(left) + "\t Right: " + String(right));
-	//int16_t intaWheelSpeed[2] = { left, right};
 	robot.setMotorSpeed(left,right);  
 }
 

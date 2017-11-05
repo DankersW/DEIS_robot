@@ -1,5 +1,5 @@
 #include "cmd_scoop.h"
-#include "robot.h"
+#include "../robot.h"
 
 CommandScoop::CommandScoop(int *args)
 {

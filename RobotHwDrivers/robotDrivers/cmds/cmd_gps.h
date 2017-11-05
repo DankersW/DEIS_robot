@@ -10,9 +10,5 @@ class CommandGPS: public Command {
     int x;
     int y;
 	double theta;
-    //int distance;
-    //int posX;
-    //int posY;
-    //void parse(String line);
 };
 #endif
