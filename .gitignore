@@ -1,0 +1,5 @@
+RobotHwDrivers\robotDrivers\_vm\
+RobotHwDrivers\robotDrivers\data\
+RobotHwDrivers\robotDrivers\Debug\
+*.componentinfo
+*.cppproj
