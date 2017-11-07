@@ -14,12 +14,9 @@ Controller::Controller(pos_t start, encoder_t encoders)
     waypoint = {0};
 }
 
-void Controller::setWaypoint(pos_t i){
-  //Serial.println("Distance \t: " + String(i.distance));
+void Controller::setWaypoint(pos_t i){;
   waypoint.x += i.x;
   waypoint.y += i.y;
-    //waypoint.x += i.distance;// 10*cos(position.theta) ;
-    //waypoint.y += 10*sin(position.theta) ;
 }
 
 void Controller::updateGPS(pos_t gps_pos){
@@ -72,8 +69,39 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors)
 		return waypointFollow(encoder_new, line_sensors);
 	case LINE_FOLLOW:
 		return lineFollow(line_sensors);
+	case LANE_CHANGE:
+		return laneChange(encoder_new, line_sensors);
 	}
 	return {0};
+}
+
+
+bool Controller::startLaneChange(bool right){
+	if(state != LINE_FOLLOW){
+		return false;
+	}
+	pos_t waypoint;
+	// set waypoint
+	if(right){
+		waypoint.x = 61;
+		waypoint.y = 21;
+	}
+	else{ // left
+		waypoint.x = 61;
+		waypoint.y = 21;
+	}
+
+	setWaypoint(waypoint);
+	state = LANE_CHANGE;
+	return true;
+}
+
+
+encoder_t Controller::laneChange(encoder_t encoder_new, line_sensors_t line_sensors){
+	encoder_t speeds = waypointFollow(encoder_new, line_sensors);
+	if(speeds.left == 0 && speeds.right == 0){ // reached destination
+		state = LINE_FOLLOW;
+	}
 }
 
 encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors){

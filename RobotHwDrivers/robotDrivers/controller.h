@@ -51,17 +51,19 @@ public:
 
 
     void setWaypoint(pos_t i);
-	
+	bool startLaneChange(bool right);
 	void startLineFollow(int speed);
 	void updateGPS(pos_t gps_pos);
 
 	void driveSetDistance(uint32_t mm);
+	void startLaneChange();
 
 protected:
 	enum State{
 		IDLE = 0,
 		LINE_FOLLOW = 1,
-		WAYPOINT_FOLLOW = 2//,
+		WAYPOINT_FOLLOW = 2,
+		LANE_CHANGE = 3//,
 		//DRIVE_SET_DISTANCE_GPS = 3,
 		//DRIVE_SET_DISTANCE_ODO = 4
 	};
@@ -88,6 +90,7 @@ protected:
 	/* STATE DEPENDENT UPDATE FUNCTIONS */
 	encoder_t lineFollow(line_sensors_t sensor);
 	encoder_t waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors);
+	encoder_t laneChange(encoder_t encoder_new, line_sensors_t line_sensors);
 };
 
 

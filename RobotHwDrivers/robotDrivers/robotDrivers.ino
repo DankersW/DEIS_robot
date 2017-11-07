@@ -7,19 +7,23 @@
 #include "heartbeat.h"
 
 Heartbeat heart_beat = Heartbeat();
+uint64_t last_lane_change;
+bool right = true;
 void setup() {
 	Serial.begin(9600);
 	Serial.setTimeout(0);
 
+
 	pinMode(12, INPUT_PULLUP); //onboard button
 
 	while (!Serial); // wait for serial port to connect. Needed for native USB port only
-  //robot.angleScoop(0);
+	robot.angleScoop(0);
   //delay(1000);
   //robot.angleScoop(1);
   //delay(1000);
   //robot.angleScoop(2);
-	//controller.startLineFollow(70);
+	controller.startLineFollow(70);
+	last_lane_change = millis();
 }
 
 
@@ -47,7 +51,11 @@ static void readSerial(){
 
 void loop() {
 	readSerial();
-
+	if((millis() - last_lane_change) > 5000 ){
+		controller.startLaneChange(right);
+		right = !right;
+		last_lane_change = millis();
+	}
 	//Serial.println("Test");
 	// read sensors
 	encoder_t		wheel_enc		= robot.readWheelEncoders();
