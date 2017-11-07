@@ -10,8 +10,4 @@
 #define    R_CTRL2   8
 #define    R_PWM     6
 
-// Threshold value for IR sensors
-#define LINETHRESHOLD 800
-
-
 #endif
