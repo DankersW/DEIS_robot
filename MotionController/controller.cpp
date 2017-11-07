@@ -127,6 +127,10 @@ k1 =control_param[0]
     ego_theta = AngDiff(waypoint.theta,ego_cosys_ang);
     r = sqrt(pow(d_x, 2) + pow(d_y, 2));
 
+    if(r < 2){
+        return {0};
+    }
+
     kappa = -1/r*(Controller::K2*(ego_delta-atan(-Controller::K1*ego_theta))+
        (1+Controller::K1/(1+(Controller::K1*pow(ego_theta,2))))*sin(ego_delta));
     vel_lin = vel_max/(1+10*abs(pow(kappa,2)));
@@ -144,8 +148,8 @@ k1 =control_param[0]
     encoders.right = encoder_new.right;
     encoders.left = encoder_new.left;
     encoder_t ret_vel;
-    ret_vel.left  = velocity.left/vel_max*255/2;
-    ret_vel.right = velocity.right/vel_max*255/2;
+    ret_vel.left  = max(velocity.left/vel_max*255/2,0);
+    ret_vel.right = max(velocity.right/vel_max*255/2,0);
     return ret_vel;
 }
 

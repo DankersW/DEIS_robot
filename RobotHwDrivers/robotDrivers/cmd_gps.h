@@ -9,9 +9,6 @@ class CommandGPS: public Command {
   private:
     int x;
     int y;
-    //int distance;
-    //int posX;
-    //int posY;
-    //void parse(String line);
+	double theta;
 };
 #endif

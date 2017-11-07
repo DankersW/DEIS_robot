@@ -7,7 +7,6 @@ class CommandLinefollow: public Command {
     CommandLinefollow(int *args);
     void execute();
   private:
-    int SPEED;
-    //void parse(String line);
+    int speed;
 };
 #endif

@@ -1,6 +1,6 @@
 #include "cmd_gps.h"
-extern int pos_x;
-extern int pos_y;
+#include "controller.h"
+
 CommandGPS::CommandGPS(int *args){
   x = args[0];
   y = args[1];
@@ -8,8 +8,11 @@ CommandGPS::CommandGPS(int *args){
 
 
 void CommandGPS::execute(){
-  Serial.println("DEBUG, setting gps to: " + String(x) + ", " + String(y));
-  pos_x = x;
-  pos_y = y;
+	Serial.println("DEBUG, setting gps to: " + String(x) + ", " + String(y));
+	pos_t pos = {0};
+	pos.x = (double)x;
+	pos.y = (double)y;
+	pos.theta = theta;
+	controller.updateGPS(pos);
 }
 

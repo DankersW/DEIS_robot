@@ -1,10 +1,5 @@
 #include "cmd_stop.h"
-#include "pin_header.h"
-
-static void stopWheels();
-static void leftWheelBreak();
-static void rightWheelBreak();
-
+#include "robot.h"
 
 CommandStop::CommandStop(int *args)
 {
@@ -13,29 +8,6 @@ CommandStop::CommandStop(int *args)
 
 void CommandStop::execute(){
   Serial.println("DEBUG,Stopping");
-  stopWheels();
-  //while (1==1){
-    //asm("nop");
-  //}
+  
+  robot.stop();
 }
-
-static void stopWheels(){
-  leftWheelBreak();
-  rightWheelBreak();
-}
-
-static void leftWheelBreak(){
-    // setting both controls HIGH, shorts the motor out -- causing it to self brake.
-    digitalWrite(L_CTRL1, HIGH);
-    digitalWrite(L_CTRL2, HIGH);
-    analogWrite(L_PWM, 0);
-}
-
-static void rightWheelBreak(){  
-    // setting both controls HIGH, shorts the motor out -- causing it to self brake.
-    digitalWrite(L_CTRL1, HIGH);
-    digitalWrite(L_CTRL2, HIGH);
-    analogWrite(R_PWM, 0);
-}
-
-
