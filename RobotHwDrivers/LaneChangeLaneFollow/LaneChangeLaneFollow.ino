@@ -56,7 +56,7 @@ void setup() {
 void loop() {
   //roadBlock = ultraSoundCheck();
   if(roadBlock == 1){    
-    //laneChange();
+    laneChange();
     //speed_left = speed_max;
     //speed_right = speed_max;
     roadBlock = 0;
