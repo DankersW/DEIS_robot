@@ -64,5 +64,5 @@ void loop() {
 	robot.setMotorSpeed(speeds.left, speeds.right);
  
 	// send heartbeat to python
-	heart_beat.update();
+	heart_beat.update(objectDistance);
 }
