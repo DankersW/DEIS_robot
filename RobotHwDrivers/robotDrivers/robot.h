@@ -39,6 +39,8 @@ class Robot
 	void stop();
 	void clearWheelEncoders();
 	void readSensors(Controller c);
+  int  readUltraSound();
+ 
 	Robot();
 
 };

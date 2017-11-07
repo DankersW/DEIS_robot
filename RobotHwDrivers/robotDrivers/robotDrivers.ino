@@ -18,8 +18,10 @@ void setup() {
   //delay(1000);
   //robot.angleScoop(1);
   //delay(1000);
-  //robot.angleScoop(2);
-	//controller.startLineFollow(70);
+  
+  robot.angleScoop(2);
+	
+	controller.startLineFollow(70);
 }
 
 
@@ -47,20 +49,20 @@ static void readSerial(){
 
 void loop() {
 	readSerial();
-
-	//Serial.println("Test");
+ 
 	// read sensors
-	encoder_t		wheel_enc		= robot.readWheelEncoders();
-	line_sensors_t	line_sensors	= robot.readLineSensors();
-	
+	encoder_t		    wheel_enc		   = robot.readWheelEncoders();
+	line_sensors_t	line_sensors	 = robot.readLineSensors();
+  int             objectDistance = robot.readUltraSound();
+  
 	// update controller
-	encoder_t speeds = controller.update(wheel_enc, line_sensors);
+	encoder_t speeds = controller.update(wheel_enc, line_sensors, objectDistance);
+  
 	//Serial.println("Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
+ 
 	// update hardware
 	robot.setMotorSpeed(speeds.left, speeds.right);
+ 
 	// send heartbeat to python
 	heart_beat.update();
-  //Serial.println("");
-
-	
 }
