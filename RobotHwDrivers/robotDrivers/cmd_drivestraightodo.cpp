@@ -1,5 +1,8 @@
+//////////////////////////////////////////////////////////////////////////
+// DEPRECATED. NOW ONLY USES ONE DRIVE STRAIGHT.
+//////////////////////////////////////////////////////////////////////////
+
 #include "cmd_drivestraightodo.h"
-#include "pin_header.h"
 #include "controller.h"
 #include <RedBot.h>
 #include "cmd_stop.h"
@@ -22,40 +25,6 @@ void CommandDriveStraightOdo::execute(){
   inputVal.distance = DISTANCE;
   inputVal.speedOg = SPEED;
   
-  controller.setWaypoint(inputVal);
+  //-controller.setWaypoint(inputVal);
   Serial.println("DISTANCE INIT :" + String(inputVal.distance));
 }
-
-
-
-#if 0
-robot.clearWheelEncoders();
-
-while (!Serial.available()){
-	encoder_t vals;
-	line_sensors_t linevals;
-	
-	
-	vals.left = encoder.getTicks(LEFT);
-	vals.right = encoder.getTicks(RIGHT);
-	linevals.left = IRSensor0.read();
-	linevals.middle = IRSensor1.read();
-	linevals.right = IRSensor2.read();
-	
-	controller.updateLineSensors(linevals);
-	encoder_t velocity = controller.update(vals);
-	
-	Serial.println("\tleftEnc: "+ String(vals.left) + "\trightEnc: " + String(vals.right) + "\tIR L: " + String(linevals.left) + "\tIR M: " + String(linevals.middle) + "\tIR R: " + String(linevals.right) + "\tleft V: " + String(velocity.left) + "\tRight V: " + String(velocity.right));
-
-	if(velocity.left == 0 && velocity.right == 0 ){
-		CommandStop commandStop = CommandStop(0);
-		commandStop.execute();
-		}else{
-		int intaWheelSpeed[2] = {int(velocity.left), int(velocity.right)};
-		driveWheels(intaWheelSpeed);
-	}
-}
-
-robot.clearWheelEncoders();
-
-#endif

@@ -7,43 +7,52 @@
 #include "controller.h"
 Robot::Robot()
 	: encoder (RedBotEncoder(A2, 10))// initializes encoder on pins A2 and 10
-	, motor(Motor())
+	, left_motor(Motor(L_CTRL1,L_CTRL2,L_PWM))
+	, right_motor(Motor(R_CTRL1,R_CTRL2,R_PWM))
 	, left_line_sensor(RedBotSensor(A3))// initialize a IRsensor object on A3 ~left
 	, middle_line_sensor(RedBotSensor(A6)) // initialize a IRsensor object on A6 ~middle
 	, right_line_sensor(RedBotSensor(A7))  // initialize a IRsensor object on A7 ~right
 	
 
 {
-	servo_right.attach(9);
-	servo_left.attach(3);
 }
 
 
 
 
 void Robot::stop(){
-	motor.stop();
+	left_motor.stop();
+	right_motor.stop();
 }
 
 void Robot::angleScoop(int mode){
+	servo_right.attach(9);
+	servo_left.attach(3);
+
 	// 0 = left   1 = right  2 = both
-	// 180° closes    30° open
+	// 180 closes    30 open
 	switch (mode){
 	case 0: // other robot is on the left side
+    Serial.println("Debug,Robot::angleScoop, Setting mode 0");
 		servo_right.write(30);
 		servo_left.write(0);
 		break;
 	case 1: // other robot is on the right side
+    Serial.println("Debug,Robot::angleScoop, Setting mode 1");
 		servo_right.write(180);
 		servo_left.write(150);
 		break;
 	case 2: // robots on both sides
+    Serial.println("Debug,Robot::angleScoop, Setting mode 2");
 		servo_right.write(180);
 		servo_left.write(0);
 		break;
 	default:
 		break;
 	}
+
+	//servo_right.detach();
+	//servo_left.detach();
 }
 
 
@@ -75,7 +84,7 @@ void Robot::readSensors(Controller c){
 	//c.updateLineSensors(linevals);
 	//velocity = c.update(vals);
 	
-	Serial.println("\tleftEnc: "+ String(vals.left) + "\trightEnc: " + String(vals.right) + "\tIR L: " + String(linevals.left) + "\tIR M: " + String(linevals.middle) + "\tIR R: " + String(linevals.right) + "\tleft V: " + String(velocity.left) + "\tRight V: " + String(velocity.right));
+	//Serial.println("\tleftEnc: "+ String(vals.left) + "\trightEnc: " + String(vals.right) + "\tIR L: " + String(linevals.left) + "\tIR M: " + String(linevals.middle) + "\tIR R: " + String(linevals.right) + "\tleft V: " + String(velocity.left) + "\tRight V: " + String(velocity.right));
 
 #ifdef TODO
 	if(velocity.left == 0 && velocity.right == 0 ){
@@ -91,7 +100,9 @@ void Robot::readSensors(Controller c){
 
 
 void Robot::setMotorSpeed(int16_t left, int16_t right){
-	motor.setSpeed(left,right);
+	left_motor.setSpeed(left);
+	right_motor.setSpeed(right);
+	//motor.setSpeed(left,right);
 }
 
 void Robot::clearWheelEncoders(){

@@ -27,7 +27,8 @@ class Robot
 	RedBotSensor left_line_sensor;
 	RedBotSensor middle_line_sensor;
 	RedBotSensor right_line_sensor;
-	Motor motor;
+	Motor left_motor;
+	Motor right_motor;
 	
  public:
 	line_sensors_t readLineSensors();

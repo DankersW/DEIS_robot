@@ -52,6 +52,9 @@ class SerialHandler(object):
         lcm_thread.start() # Start the execution
         
 
+    def send_message(self, msg):
+        self.port.write(msg)
+
 
     def poll_lcm(self):
         """
@@ -82,9 +85,7 @@ class SerialHandler(object):
         self.port.flushOutput()
         self.port.write(data)
 
-        
-        
-            
+
     def run(self):
         """
         Worker method.
@@ -105,7 +106,7 @@ class SerialHandler(object):
                 self.lock.unlock()
             time.sleep(0.1)
 
-    #
+    
     @staticmethod
     def parse_line(line=""):
         """

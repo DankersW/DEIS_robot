@@ -50,7 +50,7 @@ public:
     encoder_t update(encoder_t encoder_new, line_sensors_t line_sensors);
 
 
-    void setWaypoint(cmd_input_t i);
+    void setWaypoint(pos_t i);
 	
 	void startLineFollow(int speed);
 	void updateGPS(pos_t gps_pos);

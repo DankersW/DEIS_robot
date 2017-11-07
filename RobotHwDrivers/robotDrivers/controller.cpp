@@ -7,16 +7,18 @@ static double AngDiff(double A1, double A2){ return (A1-A2) + ((A1-A2) < -M_PI)*
 Controller::Controller(pos_t start, encoder_t encoders)
     : position(start)
     , encoders(encoders)
-	, state(IDLE) {
+	, state(IDLE)
+	, target_speed(0){
 
     velocity = {0};
     waypoint = {0};
 }
 
-void Controller::setWaypoint(cmd_input_t i){
-  Serial.println("Distance \t: " + String(i.distance));
-  
-    waypoint.x += i.distance;// 10*cos(position.theta) ;
+void Controller::setWaypoint(pos_t i){
+  //Serial.println("Distance \t: " + String(i.distance));
+  waypoint.x += i.x;
+  waypoint.y += i.y;
+    //waypoint.x += i.distance;// 10*cos(position.theta) ;
     //waypoint.y += 10*sin(position.theta) ;
 }
 
@@ -29,14 +31,16 @@ void Controller::updatePosition(encoder_t encoder_deltas){
     double d_l            = M_PI * Controller::WHEEL_DIAMETER * (double(encoder_deltas.left)/ Controller::ERESOL);
     double d_c            = (d_r + d_l)/2;
     double theta_change   = (d_r - d_l)/Controller::WHEEL_BASE;
-    Serial.print("\tpxd: " + String(cos(position.theta + (theta_change/2))) + "\tdr: " + String(d_r));
+    //Serial.print("\tpxd: " + String(cos(position.theta + (theta_change/2))) + "\tdr: " + String(d_r));
     
     position.x     += d_c * cos(position.theta + (theta_change/2));
     position.y     += d_c * sin(position.theta + (theta_change/2));
     position.theta += theta_change;
 }
 
-//check for overflow
+/**
+ *  Checks for overflow
+ */
 void Controller::updateEncoders(encoder_t encoder_deltas){
   static double pos_r = 0;
   static double pos_l = 0;
@@ -69,6 +73,7 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors)
 	case LINE_FOLLOW:
 		return lineFollow(line_sensors);
 	}
+	return {0};
 }
 
 encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors){
@@ -81,15 +86,11 @@ encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_
 
     r = sqrt(pow(d_x, 2) + pow(d_y, 2));
 
-    if (r < 6){
-      //waypoint.x = 100;
-      //waypoint.y = 0;
-      if (r<3){
-        return {0};
-      }
+    if (r < 15){
+    	return {0};
     }
 
-    Serial.print("R: " + String(r) + "\tDx: " + String(d_x)+ "\tDy: " + String(d_y));
+    //Serial.print("R: " + String(r) + "\tDx: " + String(d_x)+ "\tDy: " + String(d_y));
       
     kappa = -1/r*(Controller::K2*(ego_delta-atan(-Controller::K1*ego_theta))+ (1+Controller::K1/(1+(Controller::K1*pow(ego_theta,2))))*sin(ego_delta));
     vel_lin = vel_max/(1+10*abs(pow(kappa,2)));
@@ -119,36 +120,36 @@ void Controller::startLineFollow(int speed){
 /* Linefollow. Will be called repeatedly when in linefollow state       */
 /************************************************************************/
 encoder_t Controller::lineFollow(line_sensors_t sensor){
-	int16_t v_left;
-	int16_t v_right;
+	static int16_t v_left = 0;
+	static int16_t v_right = 0;
 	
-	if(sensor.left > LINETHRESHOLD){ //left
-		v_left  = target_speed;
-		v_right = target_speed + target_speed;
-	}
-	else if(sensor.middle > LINETHRESHOLD){ //middle
-		v_left  = target_speed;
+	// calculate speed from sensor readings
+	if((sensor.left < LINETHRESHOLD) && (sensor.middle > LINETHRESHOLD) && (sensor.right < LINETHRESHOLD)){ //middle line
 		v_right = target_speed;
-	}
-	else if(sensor.right > LINETHRESHOLD){ //right
-		v_left  = target_speed + target_speed;
+		v_left = target_speed;
+	  }
+	  else if((sensor.left < LINETHRESHOLD) && (sensor.middle > LINETHRESHOLD) && (sensor.right > LINETHRESHOLD)){ //mid right
 		v_right = target_speed;
-	}
+		v_left = target_speed - 20;
+	  }
+	  else if((sensor.left < LINETHRESHOLD) && (sensor.middle < LINETHRESHOLD) && (sensor.right > LINETHRESHOLD)){ //right
+		v_right = target_speed;
+		v_left = target_speed - 40;
+	  }
+	  else if((sensor.left > LINETHRESHOLD) && (sensor.middle > LINETHRESHOLD) && (sensor.right < LINETHRESHOLD)){ //mid left
+		v_right = target_speed - 20;
+		v_left = target_speed;
+	  }
+	  else if((sensor.left > LINETHRESHOLD) && (sensor.middle < LINETHRESHOLD) && (sensor.right < LINETHRESHOLD)){ //left
+		v_right = target_speed - 40;
+		v_left = target_speed;
+	  }
+	  else{ //none of them --> keep old speed
+	  }
 		
 	encoder_t ret_vel = {v_left, v_right};
 	return ret_vel;
 }
-
-//encoder_t Controller::driveGPS(){
-//	float dx = position.x - waypoint.x;
-//	float dy = position.y - waypoint.y;
-//	float r = sqrt(pow(dx,2) + pow(dy,2));
-//
-//	 if(r > distance){
-//		 cmd = "stop";
-//	 }
-//
-//}
 
 /************************************************************************/
 /* Only drives on fused position                                        */
@@ -158,7 +159,6 @@ void Controller::driveSetDistance(uint32_t mm){
 	waypoint.y = position.y + mm*sin(position.theta);
 	waypoint.x = position.x + mm*cos(position.theta);
 	state = WAYPOINT_FOLLOW;
-
 }
 
 Controller controller = Controller();

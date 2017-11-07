@@ -1,8 +1,6 @@
 #include "cmd_gps.h"
 #include "controller.h"
 
-//extern int pos_x;
-//extern int pos_y;
 CommandGPS::CommandGPS(int *args){
   x = args[0];
   y = args[1];

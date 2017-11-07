@@ -17,18 +17,28 @@ class Motor
 		RUNNING = 1
 	};
 
+#if 0
 	int16_t speed_l;
 	int16_t speed_r;
 
 	State	state_l;
 	State	state_r; 
-	
-	void setWheel(int motor_power, int16_t ctrl1, int16_t ctrl2, State wheel_state);
-	void breakWheel(uint8_t ctrl1, uint8_t ctrl2);
+#endif
+	int16_t speed;
+	State state;
+
+	// pins
+	uint8_t ctrl1;
+	uint8_t ctrl2;
+	uint8_t pwm;
+	void set(int16_t power);
+	void brake();
+	//void setWheel(int motor_power, int16_t ctrl1, int16_t ctrl2,int16_t pwm, State wheel_state, uint8_t wheel);
+	//void breakWheel(uint8_t ctrl1, uint8_t ctrl2);
 
  public:
-	Motor();
-	void setSpeed(int16_t l, int16_t r);
+	Motor(uint8_t ctrl1, uint8_t ctrl2, uint8_t pwm);
+	void setSpeed(int16_t l);
 	void stop();
 
 };

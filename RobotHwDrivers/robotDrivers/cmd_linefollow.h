@@ -8,6 +8,5 @@ class CommandLinefollow: public Command {
     void execute();
   private:
     int speed;
-    //void parse(String line);
 };
 #endif
