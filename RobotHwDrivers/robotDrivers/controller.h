@@ -31,8 +31,8 @@ public:
     static constexpr double ERESOL          = 192;
     static constexpr double K1              = 0;
     static constexpr double K2              = 2;
-	static const int		LINETHRESHOLD	= 800; // Threshold value for IR sensors
-    static const int        ENCODER_MAX     = 0X7ff;
+	  static const     int		LINETHRESHOLD	  = 800; // Threshold value for IR sensors
+    static const     int    ENCODER_MAX     = 0X7ff;
     
     double vel_lin = 0;
     double vel_max = 2;

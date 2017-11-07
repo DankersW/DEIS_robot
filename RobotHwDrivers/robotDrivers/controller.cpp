@@ -64,7 +64,7 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
   if(distance < 20){ //object detected less then 20 cm in front 
     return{0};
   }
-	
+  
 	// TODO: Implementing a proper state machine using inheritance would be more neat
 	switch(state){
 	case IDLE:
@@ -106,6 +106,7 @@ encoder_t Controller::laneChange(encoder_t encoder_new, line_sensors_t line_sens
 	if(speeds.left == 0 && speeds.right == 0){ // reached destination
 		state = LINE_FOLLOW;
 	}
+ return speeds;
 }
 
 encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors){
