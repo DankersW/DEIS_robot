@@ -12,13 +12,13 @@ Robot::Robot()
 	, left_line_sensor(RedBotSensor(A3))// initialize a IRsensor object on A3 ~left
 	, middle_line_sensor(RedBotSensor(A6)) // initialize a IRsensor object on A6 ~middle
 	, right_line_sensor(RedBotSensor(A7))  // initialize a IRsensor object on A7 ~right
-	
 
 {
+  // setup Ultra sound
+  pinMode(TRIGGER, OUTPUT);
+  pinMode(ECHO, INPUT);
+  digitalWrite(TRIGGER, 0);
 }
-
-
-
 
 void Robot::stop(){
 	left_motor.stop();
@@ -50,9 +50,18 @@ void Robot::angleScoop(int mode){
 	default:
 		break;
 	}
-
-	//servo_right.detach();
-	//servo_left.detach();
+}
+int Robot::readUltraSound(){
+  int distance; 
+  long duration;
+  
+  digitalWrite(TRIGGER, HIGH);
+  delayMicroseconds(10); // needed for correct readings
+  digitalWrite(TRIGGER, LOW);
+  duration = pulseIn(ECHO, HIGH);
+  distance = (duration/2) / 29.1;
+  
+  return distance;
 }
 
 

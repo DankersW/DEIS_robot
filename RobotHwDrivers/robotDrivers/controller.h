@@ -47,7 +47,7 @@ public:
 	/**
 	 * General update function. Will behave different depending on controller state. 
 	 */
-    encoder_t update(encoder_t encoder_new, line_sensors_t line_sensors);
+    encoder_t update(encoder_t encoder_new, line_sensors_t line_sensors, int distance);
 
 
     void setWaypoint(pos_t i);
@@ -62,8 +62,7 @@ protected:
 	enum State{
 		IDLE = 0,
 		LINE_FOLLOW = 1,
-		WAYPOINT_FOLLOW = 2,
-		LANE_CHANGE = 3//,
+		WAYPOINT_FOLLOW = 2//,
 		//DRIVE_SET_DISTANCE_GPS = 3,
 		//DRIVE_SET_DISTANCE_ODO = 4
 	};
@@ -98,3 +97,11 @@ extern Controller controller;
 
 #endif
 
+
+	enum State{
+		IDLE = 0,
+		LINE_FOLLOW = 1,
+		WAYPOINT_FOLLOW = 2,
+		LANE_CHANGE = 3//,
+		//DRIVE_SET_DISTANCE_GPS = 3,
+		//DRIVE_SET_DISTANCE_ODO = 4

@@ -19,7 +19,7 @@ class Heartbeat
 	
  public:
 	Heartbeat();
-	void update();
+	void update(int distance);
 };
 
 //extern Heartbeat h;

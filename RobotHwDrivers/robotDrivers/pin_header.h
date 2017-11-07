@@ -10,4 +10,8 @@
 #define    R_CTRL2   8
 #define    R_PWM     6
 
+// Ultra sound
+#define    TRIGGER   A0
+#define    ECHO      A1
+
 #endif

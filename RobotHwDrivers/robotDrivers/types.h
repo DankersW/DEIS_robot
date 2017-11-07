@@ -26,5 +26,4 @@ typedef struct encoder {
 	}
 } encoder_t;
 
-
 #endif
