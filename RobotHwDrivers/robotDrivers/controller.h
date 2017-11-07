@@ -62,7 +62,8 @@ protected:
 	enum State{
 		IDLE = 0,
 		LINE_FOLLOW = 1,
-		WAYPOINT_FOLLOW = 2//,
+		WAYPOINT_FOLLOW = 2,
+		LANE_CHANGE = 3//,
 		//DRIVE_SET_DISTANCE_GPS = 3,
 		//DRIVE_SET_DISTANCE_ODO = 4
 	};
@@ -97,11 +98,3 @@ extern Controller controller;
 
 #endif
 
-
-	enum State{
-		IDLE = 0,
-		LINE_FOLLOW = 1,
-		WAYPOINT_FOLLOW = 2,
-		LANE_CHANGE = 3//,
-		//DRIVE_SET_DISTANCE_GPS = 3,
-		//DRIVE_SET_DISTANCE_ODO = 4

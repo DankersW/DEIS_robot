@@ -23,6 +23,8 @@ void setup() {
   //delay(1000);
   //robot.angleScoop(2);
 	//controller.startLineFollow(70);
+	controller.startLineFollow(70);
+	last_lane_change = millis();
 }
 
 
@@ -51,14 +53,19 @@ static void readSerial(){
 void loop() {
 	readSerial();
 
+	if((millis() - last_lane_change) > 5000 ){
+		controller.startLaneChange(right);
+		right = !right;
+		last_lane_change = millis();
+	}
 	//Serial.println("Test");
 	// read sensors
 	encoder_t		    wheel_enc		   = robot.readWheelEncoders();
 	line_sensors_t	line_sensors	 = robot.readLineSensors();
-  int             objectDistance = robot.readUltraSound();
+	int16_t             object_distance = robot.readUltraSound();
   
 	// update controller
-	encoder_t speeds = controller.update(wheel_enc, line_sensors, objectDistance);
+	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance);
   
 	//Serial.println("Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
  
@@ -66,15 +73,6 @@ void loop() {
 	robot.setMotorSpeed(speeds.left, speeds.right);
  
 	// send heartbeat to python
-	heart_beat.update(objectDistance);
+	heart_beat.update(object_distance);
 }
 
-	controller.startLineFollow(70);
-	last_lane_change = millis();
-  robot.angleScoop(2);
-	if((millis() - last_lane_change) > 5000 ){
-		controller.startLaneChange(right);
-		right = !right;
-		last_lane_change = millis();
-	}
-	//Serial.println("Test");
