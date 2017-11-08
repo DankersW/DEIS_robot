@@ -62,9 +62,10 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
     updatePosition(deltas);
 
   if(distance < 20){ //object detected less then 20 cm in front 
+	  Serial.print("test");
     return{0};
   }
-	
+	Serial.print(String(state));
 	// TODO: Implementing a proper state machine using inheritance would be more neat
 	switch(state){
 	case IDLE:

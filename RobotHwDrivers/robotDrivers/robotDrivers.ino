@@ -54,20 +54,20 @@ void loop() {
 	readSerial();
 
 	if((millis() - last_lane_change) > 5000 ){
-		controller.startLaneChange(right);
+		//controller.startLaneChange(right);
 		right = !right;
 		last_lane_change = millis();
 	}
 	//Serial.println("Test");
 	// read sensors
 	encoder_t		    wheel_enc		   = robot.readWheelEncoders();
-	line_sensors_t	line_sensors	 = robot.readLineSensors();
-	int16_t             object_distance = robot.readUltraSound();
+	line_sensors_t		line_sensors	   = robot.readLineSensors();
+	int32_t             object_distance    = robot.readUltraSound();
   
 	// update controller
 	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance);
   
-	//Serial.println("Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
+	Serial.println("distance: " + String(object_distance) + " Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
  
 	// update hardware
 	robot.setMotorSpeed(speeds.left, speeds.right);
