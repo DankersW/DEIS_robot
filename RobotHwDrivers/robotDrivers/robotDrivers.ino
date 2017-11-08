@@ -18,16 +18,16 @@ void setup() {
 
 	while (!Serial); // wait for serial port to connect. Needed for native USB port only
 	robot.angleScoop(2);
-  //delay(1000);
-  //robot.angleScoop(1);
-  //delay(1000);
-  //robot.angleScoop(2);
+	//delay(1000);
+	//robot.angleScoop(1);
+	//delay(1000);
+	//robot.angleScoop(2);
 	//controller.startLineFollow(70);
 	//controller.startLineFollow(70);
 	last_lane_change = millis();
   
-  controller.startLineFollow(70); //
-  controller.startLaneChange(true);
+	controller.startLineFollow(70); //
+	controller.startLaneChange(true, 35);
 }
 
 
@@ -56,22 +56,21 @@ static void readSerial(){
 void loop() {
 	readSerial();
 
-	if((millis() - last_lane_change) > 10000 ){
-    //Serial.println("\n\n\n\n");
-		controller.startLaneChange(right);
+	if((millis() - last_lane_change) > 15000 ){
+		controller.startLaneChange(right,  50);
 		right = !right;
 		last_lane_change = millis();
 	}
 	//Serial.println("Test");
 	// read sensors
-	encoder_t		    wheel_enc		    = robot.readWheelEncoders();
-	line_sensors_t	line_sensors	  = robot.readLineSensors();
-	int16_t         object_distance = robot.readUltraSound();
+	encoder_t		    wheel_enc	 	= robot.readWheelEncoders();
+	line_sensors_t		line_sensors	= robot.readLineSensors();
+	int16_t             object_distance = robot.readUltraSound();
   
 	// update controller
 	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance);
   
-	//Serial.println("Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
+	//Serial.println("distance: " + String(object_distance) + " Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
  
 	// update hardware
 	robot.setMotorSpeed(speeds.left, speeds.right);

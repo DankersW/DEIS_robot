@@ -118,6 +118,9 @@ void Robot::clearWheelEncoders(){
 	encoder.clearEnc(BOTH);  // Reset the counters.
 }
 
+encoder_t Robot::getWheelSpeeds(){
+	return {right_motor.getSpeed(), left_motor.getSpeed() };
+}
 
 Robot robot = Robot();
 
