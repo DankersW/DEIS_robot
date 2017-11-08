@@ -1,6 +1,8 @@
 #include "controller.h"
 #include "math.h"
 
+#define M_PI 3.14159265358979323846
+
 static inline int Sign(double Val) { return (Val > 0) ? 1 : ((Val < 0) ? -1 : 0); }
 static double AngDiff(double A1, double A2){ return (A1-A2) + ((A1-A2) < -M_PI)*(2*M_PI) + ((A1-A2) > M_PI)*(-2*M_PI);} //roll-over
 
@@ -15,8 +17,8 @@ Controller::Controller(pos_t start, encoder_t encoders)
 }
 
 void Controller::setWaypoint(pos_t i){;
-  waypoint.x += i.x;
-  waypoint.y += i.y;
+  waypoint.x = i.x;
+  waypoint.y = i.y;
 }
 
 void Controller::updateGPS(pos_t gps_pos){
@@ -28,17 +30,20 @@ void Controller::updatePosition(encoder_t encoder_deltas){
     double d_l            = M_PI * Controller::WHEEL_DIAMETER * (double(encoder_deltas.left)/ Controller::ERESOL);
     double d_c            = (d_r + d_l)/2;
     double theta_change   = (d_r - d_l)/Controller::WHEEL_BASE;
+    
     //Serial.print("\tpxd: " + String(cos(position.theta + (theta_change/2))) + "\tdr: " + String(d_r));
     
     position.x     += d_c * cos(position.theta + (theta_change/2));
     position.y     += d_c * sin(position.theta + (theta_change/2));
     position.theta += theta_change;
+
+    //Serial.print("\tposX: " + String(position.x) + "\tposY: " + String(position.y) + "\tpos theta: " + String(position.theta)); 
 }
 
 /**
  *  Checks for overflow
  */
-void Controller::updateEncoders(encoder_t encoder_deltas){
+encoder_t Controller::updateEncoders(encoder_t encoder_deltas){
   static double pos_r = 0;
   static double pos_l = 0;
 
@@ -51,31 +56,33 @@ void Controller::updateEncoders(encoder_t encoder_deltas){
   if(abs(encoder_deltas.left)>Controller::ENCODER_MAX/2){
     pos_l += Sign(encoders.left)*2*Controller::ENCODER_MAX;
   }
-
+  encoder_t deltas = {encoders.right-pos_r,encoders.left-pos_l};
   encoders.right = pos_r;
   encoders.left = pos_l;  
-  return;
+  return deltas;
 }
 
 encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors, int distance){
 	encoder_t deltas = encoder_new - encoders;
-    updatePosition(deltas);
-
+  deltas = updateEncoders(deltas);
+  updatePosition(deltas);
+  
+  
   if(distance < 20){ //object detected less then 20 cm in front 
 	  Serial.print("test");
     return{0};
   }
-	Serial.print(String(state));
+	
 	// TODO: Implementing a proper state machine using inheritance would be more neat
 	switch(state){
 	case IDLE:
 		break;
 	case WAYPOINT_FOLLOW:
-		return waypointFollow(encoder_new, line_sensors);
+		return waypointFollow(line_sensors);
 	case LINE_FOLLOW:
 		return lineFollow(line_sensors);
 	case LANE_CHANGE:
-		return laneChange(encoder_new, line_sensors);
+		return laneChange(line_sensors);
 	}
 	return {0};
 }
@@ -88,13 +95,15 @@ bool Controller::startLaneChange(bool right){
 	pos_t waypoint;
 	// set waypoint
 	if(right){
-		waypoint.x = 61;
-		waypoint.y = 21;
+    waypoint.x = position.x + 35*cos(position.theta - M_PI/6);
+    waypoint.y = position.y + 35*sin(position.theta - M_PI/6);
 	}
 	else{ // left
-		waypoint.x = 61;
-		waypoint.y = 21;
+		waypoint.x = position.x + 35*cos(position.theta + M_PI/6);
+		waypoint.y = position.y + 35*sin(position.theta + M_PI/6);
 	}
+
+ //Serial.println("waypoint x: " + String(waypoint.x) + "waypoint y: " + String(waypoint.y));
 
 	setWaypoint(waypoint);
 	state = LANE_CHANGE;
@@ -102,14 +111,15 @@ bool Controller::startLaneChange(bool right){
 }
 
 
-encoder_t Controller::laneChange(encoder_t encoder_new, line_sensors_t line_sensors){
-	encoder_t speeds = waypointFollow(encoder_new, line_sensors);
+encoder_t Controller::laneChange(line_sensors_t line_sensors){
+	encoder_t speeds = waypointFollow(line_sensors);
 	if(speeds.left == 0 && speeds.right == 0){ // reached destination
 		state = LINE_FOLLOW;
 	}
+ return speeds;
 }
 
-encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors){
+encoder_t Controller::waypointFollow(line_sensors_t line_sensors){
     d_x = waypoint.x - position.x;
     d_y = waypoint.y - position.y;
           
@@ -119,7 +129,7 @@ encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_
 
     r = sqrt(pow(d_x, 2) + pow(d_y, 2));
 
-    if (r < 15){
+    if (r < 10){
     	return {0};
     }
 
@@ -132,12 +142,12 @@ encoder_t Controller::waypointFollow(encoder_t encoder_new, line_sensors_t line_
     velocity.left = vel_lin-omega*Controller::WHEEL_BASE/2;
     velocity.right = 2*vel_lin-velocity.left;
 
-    encoders.right = encoder_new.right;
-    encoders.left = encoder_new.left;
+    //encoders.right = encoder_new.right;
+    //encoders.left = encoder_new.left;
     encoder_t ret_vel;
 
-    ret_vel.left  = max(velocity.left/vel_max*255/2,0);
-    ret_vel.right = max(velocity.right/vel_max*255/2,0);
+    ret_vel.left  = max(velocity.left/vel_max*255/3.5,0);
+    ret_vel.right = max(velocity.right/vel_max*255/3.5,0);
     return ret_vel;
 }
 
@@ -195,3 +205,5 @@ void Controller::driveSetDistance(uint32_t mm){
 }
 
 Controller controller = Controller();
+
+  

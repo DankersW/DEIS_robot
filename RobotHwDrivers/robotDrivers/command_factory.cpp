@@ -6,6 +6,7 @@
 #include "cmd_drivestraightodo.h"
 #include "cmd_drivegps.h"
 #include "cmd_gps.h"
+#include "cmd_lanechange.h"
 
 Command *CommandCreator::parse(String line){
   int i;
@@ -51,6 +52,9 @@ Command *CommandCreator::parse(String line){
   }
   else if(type == "gps"){
     return new CommandGPS(args);
+  }
+  else if(type == "lanechange"){
+    return new CommandLaneChange(args);
   }
   else{
     return new Command();

@@ -30,9 +30,9 @@ public:
     static constexpr double WHEEL_DIAMETER  = 6.5 ; //cm
     static constexpr double ERESOL          = 192;
     static constexpr double K1              = 0;
-    static constexpr double K2              = 2;
-	static const int		LINETHRESHOLD	= 800; // Threshold value for IR sensors
-    static const int        ENCODER_MAX     = 0X7ff;
+    static constexpr double K2              = 1;
+	  static const     int		LINETHRESHOLD	  = 800; // Threshold value for IR sensors
+    static const     int    ENCODER_MAX     = 0X7ff;
     
     double vel_lin = 0;
     double vel_max = 2;
@@ -41,7 +41,7 @@ public:
     
     Controller(pos_t start = {0}, encoder_t encoders = {0});
     void updatePosition(encoder_t encoder_deltas);
-    void updateEncoders(encoder_t encoder_deltas);
+    encoder_t updateEncoders(encoder_t encoder_deltas);
 
 
 	/**
@@ -89,8 +89,8 @@ protected:
 	
 	/* STATE DEPENDENT UPDATE FUNCTIONS */
 	encoder_t lineFollow(line_sensors_t sensor);
-	encoder_t waypointFollow(encoder_t encoder_new, line_sensors_t line_sensors);
-	encoder_t laneChange(encoder_t encoder_new, line_sensors_t line_sensors);
+	encoder_t waypointFollow(line_sensors_t line_sensors);
+	encoder_t laneChange(line_sensors_t line_sensors);
 };
 
 
