@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include "types.h"
-
+#include "encoder.h"
 typedef struct pos_struct{
     double x;
     double y;
@@ -31,8 +31,8 @@ public:
     static constexpr double ERESOL          = 192;
     static constexpr double K1              = 0;
     static constexpr double K2              = 1;
-	  static const     int		LINETHRESHOLD	  = 800; // Threshold value for IR sensors
-    static const     int    ENCODER_MAX     = 0X7ff;
+    static const     int	LINETHRESHOLD	= 800; // Threshold value for IR sensors
+    static const     int    ENCODER_MAX     = 0x7fff;
     
     double vel_lin = 0;
     double vel_max = 2;
@@ -51,7 +51,7 @@ public:
 
 
     void setWaypoint(pos_t i);
-	bool startLaneChange(bool right);
+	bool startLaneChange(bool right, uint8_t rad_cm);
 	void startLineFollow(int speed);
 	void updateGPS(pos_t gps_pos);
 
@@ -74,7 +74,8 @@ protected:
     encoder_t velocity;
     State  state;
     line_sensors_t line_sensors = {0};
-    
+    Encoder left_encoder;
+    Encoder right_encoder;
     float Ielines[3] = {0}; 
     double ego_cosys_ang = 0;
     double ego_delta = 0;
@@ -86,7 +87,9 @@ protected:
     double r = 0;
 	
 	int target_speed;
-	
+	bool right_lane_change;
+	uint64_t lane_change_start;
+	encoder_t lane_change_speeds;
 	/* STATE DEPENDENT UPDATE FUNCTIONS */
 	encoder_t lineFollow(line_sensors_t sensor);
 	encoder_t waypointFollow(line_sensors_t line_sensors);

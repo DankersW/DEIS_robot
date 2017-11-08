@@ -39,6 +39,7 @@ class Motor
  public:
 	Motor(uint8_t ctrl1, uint8_t ctrl2, uint8_t pwm);
 	void setSpeed(int16_t l);
+	int16_t getSpeed();
 	void stop();
 
 };

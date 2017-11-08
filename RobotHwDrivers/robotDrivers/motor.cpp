@@ -59,3 +59,7 @@ void Motor::brake(){
 	digitalWrite(ctrl2, HIGH);
 	analogWrite(pwm, 0);
 }
+
+int16_t Motor::getSpeed(){
+	return speed;
+}

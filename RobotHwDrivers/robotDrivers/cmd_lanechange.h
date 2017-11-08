@@ -8,5 +8,6 @@ class CommandLaneChange: public Command {
     void execute();
   private:
     String direction;
+    uint8_t radius_cm;
 };
 #endif

@@ -21,8 +21,8 @@ class Robot
  protected:
 	Servo servo_right;
 	Servo servo_left;
-	
-	RedBotEncoder encoder;
+
+	RedBotEncoder encoder; // actual encoders
 	
 	RedBotSensor left_line_sensor;
 	RedBotSensor middle_line_sensor;
@@ -35,11 +35,13 @@ class Robot
 	encoder_t readWheelEncoders();
 	void angleScoop(int mode);
 	void setMotorSpeed(int16_t left, int16_t right);
+	encoder_t getWheelSpeeds();
 	
 	void stop();
 	void clearWheelEncoders();
 	void readSensors(Controller c);
-  int  readUltraSound();
+	int  readUltraSound();
+
  
 	Robot();
 
