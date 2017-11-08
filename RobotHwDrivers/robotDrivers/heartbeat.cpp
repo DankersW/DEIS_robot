@@ -16,7 +16,7 @@ void Heartbeat::update(int distance){
 		// Possibly change conditions
    if(distance < 50) //object detected less then 60 cm from robot
       message += "US, " + String(distance);
-      Serial.println(message);
+      //Serial.println(message);
 	}
 }
 

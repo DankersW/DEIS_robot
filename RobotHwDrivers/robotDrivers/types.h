@@ -12,8 +12,8 @@ typedef struct line_sensors{
 } line_sensors_t;
 
 typedef struct encoder {
-	int16_t right;
-	int16_t left;
+	int32_t right;
+	int32_t left;
 
 	struct encoder operator+(struct encoder other){
 		other.right += right;

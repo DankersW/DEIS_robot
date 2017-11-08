@@ -27,7 +27,7 @@ void setup() {
 	last_lane_change = millis();
   
   controller.startLineFollow(70); //
-  controller.startLaneChange(false);
+  controller.startLaneChange(true);
 }
 
 
@@ -56,8 +56,9 @@ static void readSerial(){
 void loop() {
 	readSerial();
 
-	if((millis() - last_lane_change) > 5000 ){
-		//controller.startLaneChange(right);
+	if((millis() - last_lane_change) > 10000 ){
+    //Serial.println("\n\n\n\n");
+		controller.startLaneChange(right);
 		right = !right;
 		last_lane_change = millis();
 	}
