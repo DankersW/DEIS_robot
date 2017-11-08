@@ -41,14 +41,9 @@ void Controller::updatePosition(encoder_t encoder_deltas){
     position.y     += d_c * sin(position.theta + (theta_change/2));
     position.theta += theta_change;
 
-    Serial.println("\tposX: " + String(position.x) + "\tposY: " + String(position.y) + "\tpos theta: " + String(position.theta)); 
+    //Serial.println("\tposX: " + String(position.x) + "\tposY: " + String(position.y) + "\tpos theta: " + String(position.theta)); 
 }
-<<<<<<< Updated upstream
-=======
 
-
-
->>>>>>> Stashed changes
 /**
  *  Checks for overflow
  */
@@ -68,14 +63,9 @@ encoder_t Controller::updateEncoders(encoder_t encoder_deltas){
   if(abs(encoder_deltas.left)>Controller::ENCODER_MAX/2){
     pos_l += Sign(encoders.left)*2*(Controller::ENCODER_MAX+1);
   }
-<<<<<<< Updated upstream
 
   encoder_t deltas = {pos_r-encoders.right,pos_l- encoders.left};
 
-=======
-  encoder_t deltas = {encoders.right-pos_r,encoders.left-pos_l};
-  
->>>>>>> Stashed changes
   encoders.right = pos_r;
   encoders.left = pos_l;  
   return deltas;
@@ -135,11 +125,7 @@ bool Controller::startLaneChange(bool right, uint8_t rad_cm){
 	}
 	waypoint.theta = position.theta;
 
-<<<<<<< Updated upstream
 	//Serial.println("waypoint x: " + String(waypoint.x) + "waypoint y: " + String(waypoint.y));
-=======
- Serial.println("waypoint x: " + String(waypoint.x) + "waypoint y: " + String(waypoint.y));
->>>>>>> Stashed changes
 
 	setWaypoint(waypoint);
 #endif

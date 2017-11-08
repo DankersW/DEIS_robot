@@ -2,6 +2,7 @@
 
 #ifndef _HEARTBEAT_H_
 #define _HEARTBEAT_H_
+#include "types.h"
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "Arduino.h"
@@ -19,7 +20,7 @@ class Heartbeat
 	
  public:
 	Heartbeat();
-	void update(int distance);
+	void update(int distance, encoder_t wheel_enc);
 };
 
 //extern Heartbeat h;

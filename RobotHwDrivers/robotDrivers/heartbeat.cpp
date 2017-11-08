@@ -3,21 +3,27 @@
 // 
 
 #include "heartbeat.h"
+#include "types.h"
 
 Heartbeat::Heartbeat()
 	: time_last_message(millis()) { // initialize to current time
 }
 
-void Heartbeat::update(int distance){
+void Heartbeat::update(int distance, encoder_t wheel_enc){
 	unsigned long now = millis();
   String message = "";
 	if(now - time_last_message >= HEARBEAT_PERIOD){
 		// TODO: Send message here
 		// Possibly change conditions
-   if(distance < 50) //object detected less then 60 cm from robot
-      message += "US, " + String(distance);
-      //Serial.println(message);
-	}
+    if(distance < 50) //object detected less then 60 cm from robot
+      message = "US, " + String(distance);
+      Serial.println(message);
+	  }
+
+    message = "odm," + String(wheel_enc.left) + "," + String(wheel_enc.right);
+    Serial.println(message);
+    
+  
 }
 
 //Heartbeat Heartbeat;
