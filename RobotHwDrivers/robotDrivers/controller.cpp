@@ -25,8 +25,10 @@ void Controller::setWaypoint(pos_t i){;
   waypoint.y = i.y;
 }
 
-void Controller::updateGPS(pos_t gps_pos){
-	position = gps_pos;
+void Controller::updateGPS(int16_t x, int16_t y, int16_t theta){
+	position.x = x;
+	position.y = y;
+	position.theta = (double)theta / 1000;
 }
 
 void Controller::updatePosition(encoder_t encoder_deltas){

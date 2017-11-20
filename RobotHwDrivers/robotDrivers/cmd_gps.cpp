@@ -13,6 +13,6 @@ void CommandGPS::execute(){
 	pos.x = (double)x;
 	pos.y = (double)y;
 	pos.theta = theta;
-	controller.updateGPS(pos);
+	controller.updateGPS(0,0,0);
 }
 

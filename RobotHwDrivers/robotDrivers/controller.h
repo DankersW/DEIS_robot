@@ -9,8 +9,14 @@
 #include "types.h"
 #include "encoder.h"
 typedef struct pos_struct{
-    double x;
-    double y;
+	union{
+    int16_t x;
+    uint8_t x_array[2];
+	};
+	union{
+    int16_t y;
+    uint8_t y_array[2];
+	};
     double theta;
 } pos_t;
 
@@ -38,6 +44,7 @@ public:
     double vel_max = 2;
     static const int CHANNEL = 1;
     pos_t waypoint;
+    pos_t position;
     
     Controller(pos_t start = {0}, encoder_t encoders = {0});
     void updatePosition(encoder_t encoder_deltas);
@@ -53,7 +60,11 @@ public:
     void setWaypoint(pos_t i);
 	bool startLaneChange(bool right, uint8_t rad_cm);
 	void startLineFollow(int speed);
-	void updateGPS(pos_t gps_pos);
+
+	/**
+	 * theta will be resized with / 1000
+	 */
+	void updateGPS(int16_t x, int16_t y, int16_t theta);
 
 	void driveSetDistance(uint32_t mm);
 	void startLaneChange();
@@ -69,7 +80,6 @@ protected:
 		//DRIVE_SET_DISTANCE_ODO = 4
 	};
 
-    pos_t position;
     encoder_t encoders;
     encoder_t reading;
     encoder_t velocity;

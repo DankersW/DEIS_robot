@@ -5,14 +5,93 @@
 #include "controller.h"
 #include "robot.h"
 #include "heartbeat.h"
+#include "Wire.h"
+
+
+#define SLAVE_ADDRESS 0x04
 
 Heartbeat heart_beat = Heartbeat();
 uint64_t last_lane_change;
 bool right = true;
+uint8_t buf[20];
+uint8_t len;
+bool data_available = false;
+
+
+
+// callback for received data
+void receiveData(int byteCount){
+	uint8_t index = 0;
+	//Serial.print(byteCount);
+	while(byteCount--){
+		data_available = true;
+		buf[index++] = Wire.read();
+		//Serial.println(buf[index-1]);
+	}
+	len = index;
+//Serial.println("len = " + String(len));
+	data_available = true;
+}
+
+// callback for sending data
+// Dont do extra work here.
+void sendData(){
+	int16_t theta;
+	int16_t x;
+	int16_t y;
+	pos_t p;
+	//Serial.print("Sending cmd :");
+	//Serial.println(buf[0]);
+	switch(buf[0]){
+	case 1:
+		Wire.write(0);
+		break;
+	case 0x10:
+		//Wire.beginTransmission();
+		p = controller.getPosition();
+		Serial.println("Sending x");
+		Wire.write(p.x_array, sizeof(p.x_array));
+		break;
+	case 0x12:
+		p = controller.getPosition();
+		Serial.println("Sending y: " + String(p.y));
+		Wire.write(p.y_array, sizeof(p.y_array));
+		break;
+	case 0x14:
+		p = controller.getPosition();
+		uint8_t buf[2];
+		theta = (int16_t)(p.theta*1000);
+
+		buf[0] = theta & 0xFF;
+		buf[1] = (theta >> 8)&0xFF;
+		Wire.write(buf, sizeof(buf));
+		break;
+	case 201:
+		//Wire.write(201);
+		break;
+	case 202:
+		//Wire.write(202);
+		break;
+	case 203:
+		//Wire.write(203);
+		break;
+	}
+//Wire.write(buf,len);
+//Wire.write(buf[0]);
+}
+
+
+
 void setup() {
-	Serial.begin(115200);
-  //Serial.begin(9600);
+	Serial.begin(9600);
 	Serial.setTimeout(0);
+
+	// initialize i2c as slave
+	Wire.begin(SLAVE_ADDRESS);
+
+	// define callbacks for i2c communication
+	Wire.onReceive(receiveData);
+	Wire.onRequest(sendData);
 
 
 	pinMode(12, INPUT_PULLUP); //onboard button
@@ -56,8 +135,45 @@ static void readSerial(){
 }
 
 void loop() {
-	readSerial();
-  
+	//readSerial();
+	if(data_available){
+		int16_t x;
+		int16_t y;
+		Serial.println("Cmd: " + String(buf[0]));
+		data_available = false;
+		switch(buf[0]){
+		case 1: // scoop commmand
+			robot.angleScoop(buf[1]);
+			break;
+		case 0x10:
+			if(len < 3){
+				Serial.println("Reg: " + String(buf[0]) + " not enough data. Len = " + String(len));
+				break;
+			}
+			x = buf[1] | buf[2] << 8;
+			Serial.println("Setting x to: " + String(x));
+			controller.position.x = x;
+			break;
+		case 0x12:
+			if(len < 3){
+				Serial.println("Reg: " + String(buf[0]) + " Not enough data");
+				break;
+			}
+			y = buf[1] | buf[2] << 8;
+			Serial.println("Setting y to: " + String(y));
+			controller.position.y = y;
+			break;
+		case 0x14:
+			if(len < 3){
+				Serial.println("Reg: " + String(buf[0]) + "Not enough data");
+				break;
+			}
+			int16_t theta = buf[1] | buf[2] << 8;
+			controller.position.theta = ((double)theta) / 1000;
+			Serial.println("Theta set to: " + String(controller.position.theta));
+			break;
+		}
+	}
 //	if((millis() - last_lane_change) > 15000 ){
 //		controller.startLaneChange(right,  50);
 //		right = !right;
