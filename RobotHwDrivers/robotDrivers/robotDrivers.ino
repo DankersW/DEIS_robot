@@ -66,7 +66,7 @@ void sendData(){
 		buf[1] = (theta >> 8)&0xFF;
 		Wire.write(buf, sizeof(buf));
 		break;
-	case 201:
+	case 0x20:
 		//Wire.write(201);
 		break;
 	case 202:
@@ -78,6 +78,55 @@ void sendData(){
 	}
 //Wire.write(buf,len);
 //Wire.write(buf[0]);
+}
+
+void readData(){
+  int16_t theta;
+  
+  if(data_available){
+    int16_t x;
+    int16_t y;
+    Serial.println("Cmd: " + String(buf[0]));
+    data_available = false;
+    switch(buf[0]){
+    case 1: // scoop commmand
+      robot.angleScoop(buf[1]);
+      break;
+    case 0x10:
+      if(len < 3){
+        Serial.println("Reg: " + String(buf[0]) + " not enough data. Len = " + String(len));
+        break;
+      }
+      x = buf[1] | buf[2] << 8;
+      Serial.println("Setting x to: " + String(x));
+      controller.position.x = x;
+      break;
+    case 0x12:
+      if(len < 3){
+        Serial.println("Reg: " + String(buf[0]) + " Not enough data");
+        break;
+      }
+      y = buf[1] | buf[2] << 8;
+      Serial.println("Setting y to: " + String(y));
+      controller.position.y = y;
+      break;
+    case 0x14:
+      if(len < 3){
+        Serial.println("Reg: " + String(buf[0]) + "Not enough data");
+        break;
+      }
+      theta = buf[1] | buf[2] << 8;
+      controller.position.theta = ((double)theta) / 1000;
+      Serial.println("Theta set to: " + String(controller.position.theta));
+      break;
+    case 0x20: //lanefollow with speed
+      controller.startLineFollow(buf[1]);
+      break;
+    case 0x22: //lane change with direction
+      controller.startLaneChange(buf[1]==1, 35);
+      break;
+    }
+  }
 }
 
 
@@ -135,51 +184,9 @@ static void readSerial(){
 }
 
 void loop() {
-	//readSerial();
-	if(data_available){
-		int16_t x;
-		int16_t y;
-		Serial.println("Cmd: " + String(buf[0]));
-		data_available = false;
-		switch(buf[0]){
-		case 1: // scoop commmand
-			robot.angleScoop(buf[1]);
-			break;
-		case 0x10:
-			if(len < 3){
-				Serial.println("Reg: " + String(buf[0]) + " not enough data. Len = " + String(len));
-				break;
-			}
-			x = buf[1] | buf[2] << 8;
-			Serial.println("Setting x to: " + String(x));
-			controller.position.x = x;
-			break;
-		case 0x12:
-			if(len < 3){
-				Serial.println("Reg: " + String(buf[0]) + " Not enough data");
-				break;
-			}
-			y = buf[1] | buf[2] << 8;
-			Serial.println("Setting y to: " + String(y));
-			controller.position.y = y;
-			break;
-		case 0x14:
-			if(len < 3){
-				Serial.println("Reg: " + String(buf[0]) + "Not enough data");
-				break;
-			}
-			int16_t theta = buf[1] | buf[2] << 8;
-			controller.position.theta = ((double)theta) / 1000;
-			Serial.println("Theta set to: " + String(controller.position.theta));
-			break;
-		}
-	}
-//	if((millis() - last_lane_change) > 15000 ){
-//		controller.startLaneChange(right,  50);
-//		right = !right;
-//		last_lane_change = millis();
-//	}
-	//Serial.println("Test");
+  // read data/commands from PI
+	readData();
+
  
 	// read sensors
 	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();

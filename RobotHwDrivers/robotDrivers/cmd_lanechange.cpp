@@ -6,7 +6,7 @@ CommandLaneChange::CommandLaneChange(int *args)
   radius_cm = args[1];
 }
 
-void CommandLaneChange::execute(){
+void CommandLaneChange::execute(){  
   if(direction == "right"){
     controller.startLaneChange(true, radius_cm);
   }
