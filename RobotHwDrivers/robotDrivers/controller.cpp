@@ -43,6 +43,9 @@ void Controller::updatePosition(encoder_t encoder_deltas){
 
     //Serial.println("\tposX: " + String(position.x) + "\tposY: " + String(position.y) + "\tpos theta: " + String(position.theta)); 
 }
+pos_t Controller::getPosition(){
+  return position;
+}
 
 /**
  *  Checks for overflow
@@ -50,6 +53,8 @@ void Controller::updatePosition(encoder_t encoder_deltas){
 encoder_t Controller::updateEncoders(encoder_t encoder_deltas){
   static int32_t pos_r = 0;
   static int32_t pos_l = 0;
+
+  //Serial.println("Encoder deltas R: " + String(encoder_deltas.right) + "\t L: " + String(encoder_deltas.left));
 
   pos_r += encoder_deltas.right;
   pos_l += encoder_deltas.left;
@@ -64,12 +69,13 @@ encoder_t Controller::updateEncoders(encoder_t encoder_deltas){
     pos_l += Sign(encoders.left)*2*(Controller::ENCODER_MAX+1);
   }
 
-  encoder_t deltas = {pos_r-encoders.right,pos_l- encoders.left};
+  encoder_t deltas = {pos_r-encoders.right, pos_l- encoders.left};
 
   encoders.right = pos_r;
   encoders.left = pos_l;  
   return deltas;
 }
+
 #if 0
 
 encoder_t Controller::updateEncoders(encoder_t encoder_new){
@@ -79,9 +85,10 @@ encoder_t Controller::updateEncoders(encoder_t encoder_new){
 }
 
 #endif
+
 encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors, int distance){
 	encoder_t deltas = encoder_new - encoders;
-	deltas = updateEncoders(encoder_new);
+	deltas = updateEncoders(deltas);
 
 	//Serial.println("delt-l: " + String(deltas.left) + " delt-r: " + String(deltas.right));
 	updatePosition(deltas);
@@ -98,7 +105,7 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 	case WAYPOINT_FOLLOW:
 		return waypointFollow(line_sensors);
 	case LINE_FOLLOW:
-		return lineFollow(line_sensors);
+		return lineFollow(line_sensors,distance);
 	case LANE_CHANGE:
 		return laneChange(line_sensors);
 	}
@@ -212,7 +219,7 @@ void Controller::startLineFollow(int speed){
 /************************************************************************/
 /* Linefollow. Will be called repeatedly when in linefollow state       */
 /************************************************************************/
-encoder_t Controller::lineFollow(line_sensors_t sensor){
+encoder_t Controller::lineFollow(line_sensors_t sensor,int distance){
 	static int16_t v_left = 0;
 	static int16_t v_right = 0;
 	
@@ -239,7 +246,10 @@ encoder_t Controller::lineFollow(line_sensors_t sensor){
 	  }
 	  else{ //none of them --> keep old speed
 	  }
-		
+		if (distance < 40){
+      //controller.startLaneChange(true, 35);
+    //state=LANE_CHANGE;
+    }
 	encoder_t ret_vel = {v_left, v_right};
 	return ret_vel;
 }

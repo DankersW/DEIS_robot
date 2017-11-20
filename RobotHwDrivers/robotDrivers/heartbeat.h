@@ -14,13 +14,13 @@ class Heartbeat
 {
  protected:
 	// heartbeat period in millis
-	static const uint64_t HEARBEAT_PERIOD = 1000; 
+	static const uint32_t HEARBEAT_PERIOD = 100; 
 
-	uint64_t time_last_message;
+	uint32_t time_last_message;
 	
  public:
 	Heartbeat();
-	void update(int distance, encoder_t wheel_enc);
+	void update(int distance);
 };
 
 //extern Heartbeat h;

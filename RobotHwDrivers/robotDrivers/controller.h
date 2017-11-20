@@ -32,7 +32,7 @@ public:
     static constexpr double K1              = 0;
     static constexpr double K2              = 1;
     static const     int	LINETHRESHOLD	= 800; // Threshold value for IR sensors
-    static const     int    ENCODER_MAX     = 0x7fff;
+    static const     int32_t    ENCODER_MAX     = 0x7fff;
 
     double vel_lin = 0;
     double vel_max = 2;
@@ -57,6 +57,7 @@ public:
 
 	void driveSetDistance(uint32_t mm);
 	void startLaneChange();
+  pos_t getPosition();
 
 protected:
 	enum State{
@@ -91,7 +92,7 @@ protected:
 	uint64_t lane_change_start;
 	encoder_t lane_change_speeds;
 	/* STATE DEPENDENT UPDATE FUNCTIONS */
-	encoder_t lineFollow(line_sensors_t sensor);
+	encoder_t lineFollow(line_sensors_t sensor, int distance);
 	encoder_t waypointFollow(line_sensors_t line_sensors);
 	encoder_t laneChange(line_sensors_t line_sensors);
 };

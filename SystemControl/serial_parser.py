@@ -16,7 +16,7 @@ class CommandFactory(object): # pylint: disable=too-few-public-methods
         result = [x.strip() for x in line.split(',')]
 
         choices = { \
-            'ODO': Odometry(result), \
+            'ODM': Odometry(result), \
             'US': Ultrasonic(result),\
         }
         result = choices.get(result[0], None)

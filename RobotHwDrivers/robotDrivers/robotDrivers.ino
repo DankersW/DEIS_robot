@@ -10,7 +10,8 @@ Heartbeat heart_beat = Heartbeat();
 uint64_t last_lane_change;
 bool right = true;
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
+  //Serial.begin(9600);
 	Serial.setTimeout(0);
 
 
@@ -24,7 +25,8 @@ void setup() {
 	//robot.angleScoop(2);
 	//controller.startLineFollow(70);
 	//controller.startLineFollow(70);
-	last_lane_change = millis();
+ 
+	//last_lane_change = millis();
   
 	controller.startLineFollow(80); //
 	//controller.startLaneChange(true, 35);
@@ -55,7 +57,7 @@ static void readSerial(){
 
 void loop() {
 	readSerial();
-
+  
 //	if((millis() - last_lane_change) > 15000 ){
 //		controller.startLaneChange(right,  50);
 //		right = !right;
@@ -64,9 +66,9 @@ void loop() {
 	//Serial.println("Test");
  
 	// read sensors
-	encoder_t		    wheel_enc	 	= robot.readWheelEncoders();
-	line_sensors_t		line_sensors	= robot.readLineSensors();
-	int16_t             object_distance = robot.readUltraSound();
+	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();
+	line_sensors_t		line_sensors	  = robot.readLineSensors();
+	int16_t           object_distance = robot.readUltraSound();
   
 	// update controller
 	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance);
@@ -77,6 +79,6 @@ void loop() {
 	robot.setMotorSpeed(speeds.left, speeds.right);
  
 	// send heartbeat to python
-	heart_beat.update(object_distance, wheel_enc);
+	//heart_beat.update(object_distance);
 }
 

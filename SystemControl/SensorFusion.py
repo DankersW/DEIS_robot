@@ -1,6 +1,6 @@
 
 class SensorFusion:
-    def __init__(self,gps_data,odometry_data,K=0.9):
+    def __init__(self,odometry_data,gps_data=None,K=0.9):
         self.gps_data=gps_data
         self.odometry_data=odometry_data
         self.K=K

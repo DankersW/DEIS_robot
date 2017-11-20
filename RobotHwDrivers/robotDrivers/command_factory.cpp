@@ -9,10 +9,10 @@
 #include "cmd_lanechange.h"
 
 Command *CommandCreator::parse(String line){
-  int i;
+  int i = 0;
   int index = 0;
-  int args[10];
-  
+  int args[10] = {0};
+  Serial.println("Debug, received line: " + line);
   // first read the op
   i = line.indexOf(',');
   

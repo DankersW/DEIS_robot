@@ -32,11 +32,12 @@ class SerialHandler(object):
     TODO: Receive commands, send on uart.
     """
     #serial.Serial('/dev/ttyUSB1', baudrate=4800, timeout=1)
-    def __init__(self, port, baud):
+    def __init__(self, port, baud, target):
         self.data = 0
         self.command = 0
         self.port = serial.Serial(port, baudrate=baud, timeout=1)
         self.lock = mutex.mutex()
+        self.target = target
 
     def send_message(self, msg):
         self.port.write(msg)

@@ -87,21 +87,24 @@ class GpsData:
            
         x_median = np.median(cols)
         y_median = np.median(rows)
-        
-        print "x_median", x_median, "y_median", y_median
-        
-        if(!math.isnan(x_median) and !math.isnan(y_median)):
-            x_coordinate = int((2250*np.median(cols) / image_width)/10)*10 + self.x_offset # check_col needs to be multiplied by real width of the table seen the camera
-            y_coordinate = int((1650*np.median(rows) / image_height)/10)*10 + self.y_offset # check_row needs to be multiplied by real height of the table seen   by the camera
 
-            dy = y_coordinate - self.y
-            dx = x_coordinate - self.x
-            
-            if(dx != 0 and dy != 0):
-                self.theta = math.atan2(dy, dx)
-                
-            self.x = x_coordinate
-            self.y = y_coordinate
+        print "x_median", x_median, "y_median", y_median
+
+        if math.isnan(x_median) or math.isnan(y_median):
+            return None, None , None
+
+
+        x_coordinate = int((2250*np.median(cols) / image_width)/10)*10 + self.x_offset # check_col needs to be multiplied by real width of the table seen the camera
+        y_coordinate = int((1650*np.median(rows) / image_height)/10)*10 + self.y_offset # check_row needs to be multiplied by real height of the table seen   by the camera
+
+        dy = y_coordinate - self.y
+        dx = x_coordinate - self.x
+
+        if(dx != 0 and dy != 0):
+            self.theta = math.atan2(dy, dx)
+
+        self.x = x_coordinate
+        self.y = y_coordinate
         
         return self.x, self.y , self.theta
         
