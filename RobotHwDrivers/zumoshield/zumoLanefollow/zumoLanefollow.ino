@@ -6,7 +6,7 @@ ZumoReflectanceSensorArray reflectanceSensors;
 ZumoMotors motors;
 int lastError = 0;
 
-const int MAX_SPEED = 400;
+const int MAX_SPEED = 150;
 
 
 void setup()

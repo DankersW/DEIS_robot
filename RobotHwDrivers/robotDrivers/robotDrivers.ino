@@ -125,10 +125,11 @@ void readData(){
     case 0x22: //lane change with direction
       controller.startLaneChange(buf[1]==1, 35);
       break;
-    }
     case 0x30:
-      
       break;
+    }
+    case 0x40: //turn on buzzer with a frequentie. state0=NoTone state1=1Khz state2=2Khz tone
+      robot.buzzer(buf[1]);
   }
 }
 

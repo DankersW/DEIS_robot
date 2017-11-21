@@ -18,6 +18,9 @@ Robot::Robot()
   pinMode(TRIGGER, OUTPUT);
   pinMode(ECHO, INPUT);
   digitalWrite(TRIGGER, 0);
+
+  //setup buzzer pin
+  pinMode(11, OUTPUT);
 }
 
 void Robot::stop(){
@@ -62,6 +65,19 @@ int Robot::readUltraSound(){
   distance = (duration/2) / 29.1;
   
   return distance;
+}
+
+void Robot::buzzer(int state){
+  noTone(11);
+  if(state == 0){
+    noTone(11);
+  }
+  else if(state == 1){
+    tone(11, 1000);  
+  }
+  else if(state == 2){
+    tone(11, 2000);  
+  }
 }
 
 
