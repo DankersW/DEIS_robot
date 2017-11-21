@@ -41,7 +41,7 @@ class Robot
 	void clearWheelEncoders();
 	void readSensors(Controller c);
 	int  readUltraSound();
-  void buzzer();
+  void buzzer(int state);
 
  
 	Robot();

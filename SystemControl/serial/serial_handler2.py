@@ -32,38 +32,48 @@ class SerialHandler(object):
     TODO: Receive commands, send on uart.
     """
     #serial.Serial('/dev/ttyUSB1', baudrate=4800, timeout=1)
-    def __init__(self, port, baud):
+    def __init__(self, port, baud, target):
         self.data = 0
         self.command = 0
-        self.port = serial.Serial(port, baudrate=baud, timeout=1)
+        self.port = serial.Serial(port, baudrate=baud, timeout=5)
         self.lock = mutex.mutex()
+        self.target = target
+        
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True  # Daemonize thread
+        thread.start() # Start the execution
 
     def send_message(self, msg):
         self.port.write(msg)
+    
+    
+    
+    def run(self):
+        """
+        Worker method.
+        Will run forever and try to read serial port
+        """
+        while True:
+            if self.port.inWaiting():
+                #print "Data found"
+                #Try to lock mutex
+                #lock aquired. Read data
+                line = self.port.readline()
+                #self.decode_line()
+                self.parse_line(line)
+                #print line
+            time.sleep(0.1)
 
-    @staticmethod
-    def parse_line(line=""):
+    def parse_line(self, line=""):
         """
         Static method.
         Takes a string input and parses into a command
         """
+        print line
         cmd = CommandFactory.create(line)
-        cmd.execute()
-        #msg = sensor_vals_t()
-        #msg.timestamp = int(time.time())
-        #result = [x.strip() for x in line.split(',')]
-
-        #if len(result) > 2 and result[0] == "ALL":
-            #msg.wheel_encoders.left = long(result[1])
-            #msg.wheel_encoders.right = long(result[2])
-            #msg.line_sensors.left = result[3]
-            #msg.line_sensors.middle = result[4]
-            #msg.line_sensors.right = result[5]
-            #return msg
-
-        #if len(result) > 1 and result[0] == "DEBUG":
-        #print result[1]
-        return None
+        if cmd is None:
+            return
+        cmd.execute(self.target)
 
 
 

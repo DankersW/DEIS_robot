@@ -39,6 +39,7 @@ void sendData(){
 	int16_t theta;
 	int16_t x;
 	int16_t y;
+  int16_t distance_ultra;
 	pos_t p;
 	//Serial.print("Sending cmd :");
 	//Serial.println(buf[0]);
@@ -69,10 +70,16 @@ void sendData(){
 	case 0x20:
 		//Wire.write(201);
 		break;
-	case 202:
-		//Wire.write(202);
+	case 0x30: //ultra sound sent back if a object is between below the threshold ( value 1) 
+	  distance_ultra = robot.readUltraSound();
+    if(distance_ultra < 40){
+      Wire.write(1);
+    }
+    else{
+      Wire.write(0);
+    }
 		break;
-	case 203:
+	case 0x55:
 		//Wire.write(203);
 		break;
 	}
@@ -125,11 +132,12 @@ void readData(){
     case 0x22: //lane change with direction
       controller.startLaneChange(buf[1]==1, 35);
       break;
-    case 0x30:
+    case 0x30: // request Ultrasound
       break;
-    }
     case 0x40: //turn on buzzer with a frequentie. state0=NoTone state1=1Khz state2=2Khz tone
       robot.buzzer(buf[1]);
+      break;
+    }    
   }
 }
 
@@ -145,7 +153,6 @@ void setup() {
 	// define callbacks for i2c communication
 	Wire.onReceive(receiveData);
 	Wire.onRequest(sendData);
-
 
 	pinMode(12, INPUT_PULLUP); //onboard button
 

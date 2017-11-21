@@ -14,13 +14,22 @@ class CommandFactory(object): # pylint: disable=too-few-public-methods
         Returns the command encapsulated as a class.
         """
         result = [x.strip() for x in line.split(',')]
-
-        choices = { \
-            'ODM': Odometry(result), \
-            'US': Ultrasonic(result),\
-        }
-        result = choices.get(result[0], None)
-        return result
+        #print "type: ", result[0]
+        
+        #choices = { \
+        #    'ODM': Odometry(result), \
+        #    'US': Ultrasonic(result),\
+        #    'Debug': Debug(result),  \
+        #}
+        #result = choices.get(result[0], None)
+        if result[0] == 'ODM':
+            return Odometry(result)
+        elif result[0] == 'US':
+            return Ultrasonic(result)
+        elif result[0] == 'Debug':
+            return Debug(result)
+        
+        return None
 
 class Odometry(object):
     """
