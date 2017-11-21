@@ -7,8 +7,8 @@ from picamera import PiCamera
 import numpy as np
 from exlcm import example_t
 camera = PiCamera()
-height = 240
-width = 320
+height = 128
+width = 128
 camera.resolution = (width,height)
 camera.exposure_mode = 'off'
 #camera.exposure_compensation = 10
