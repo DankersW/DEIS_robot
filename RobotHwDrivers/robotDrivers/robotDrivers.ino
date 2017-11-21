@@ -126,6 +126,9 @@ void readData(){
       controller.startLaneChange(buf[1]==1, 35);
       break;
     }
+    case 0x30:
+      
+      break;
   }
 }
 
@@ -147,14 +150,6 @@ void setup() {
 
 	while (!Serial); // wait for serial port to connect. Needed for native USB port only
 	robot.angleScoop(2);
-	//delay(1000);
-	//robot.angleScoop(1);
-	//delay(1000);
-	//robot.angleScoop(2);
-	//controller.startLineFollow(70);
-	//controller.startLineFollow(70);
- 
-	//last_lane_change = millis();
   
 	controller.startLineFollow(80); //
 	//controller.startLaneChange(true, 35);
