@@ -32,16 +32,16 @@ typedef struct cmd_input{
 class Controller {
 
 public:
-    static constexpr double WHEEL_BASE      = 18; //cm
-    static constexpr double WHEEL_DIAMETER  = 6.5 ; //cm
-    static constexpr double ERESOL          = 192;
-    static constexpr double K1              = 0;
-    static constexpr double K2              = 1;
-    static const     int	LINETHRESHOLD	= 800; // Threshold value for IR sensors
-    static const     int32_t    ENCODER_MAX = 0x7fff;
-    static const 	int	MAX_SPEED			= 255;
-	float kp = 1.7;
-	float kd = 90;
+    static constexpr double   WHEEL_BASE      = 18; //cm
+    static constexpr double   WHEEL_DIAMETER  = 6.5 ; //cm
+    static constexpr double   ERESOL          = 192;
+    static constexpr double   K1              = 0;
+    static constexpr double   K2              = 1;
+    static const     int	    LINETHRESHOLD	  = 800; // Threshold value for IR sensors
+    static const     int32_t  ENCODER_MAX     = 0x7fff;
+    static const  	 int	    MAX_SPEED			  = 150;
+	                   float    kp              = 1.7; 
+	                   float    kd              = 45; // for a speed of 90
 
 	float e;
 	float last_e;

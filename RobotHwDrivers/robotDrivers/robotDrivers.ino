@@ -167,7 +167,7 @@ void setup() {
 	while (!Serial); // wait for serial port to connect. Needed for native USB port only
 	robot.angleScoop(2);
   
-	controller.startLineFollow(80); //
+	controller.startLineFollow(90); //
 	//controller.startLaneChange(true, 35);
 }
 

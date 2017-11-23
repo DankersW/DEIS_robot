@@ -59,7 +59,7 @@ int Robot::readUltraSound(){
   long duration;
   
   digitalWrite(TRIGGER, HIGH);
-  delayMicroseconds(10); // needed for correct readings
+  delayMicroseconds(20); // needed for correct readings
   digitalWrite(TRIGGER, LOW);
   duration = pulseIn(ECHO, HIGH);
   distance = (duration/2) / 29.1;

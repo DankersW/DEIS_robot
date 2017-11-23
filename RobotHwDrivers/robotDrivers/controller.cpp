@@ -99,6 +99,7 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 
 
 	if(distance < 10){ //object detected less then 20 cm in front
+    robot.angleScoop(0);
 	  return{0};
 	}
 	
@@ -118,42 +119,41 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 
 
 bool Controller::startLaneChange(bool right, uint8_t rad_cm){
-	lane_change_speeds = robot.getWheelSpeeds();
+	lane_change_speeds = {75,75} ;//robot.getWheelSpeeds(); 
 	right_lane_change = right;
 	lane_change_start = millis();
 	state = LANE_CHANGE;
 	return true;
 }
 
-
 encoder_t Controller::laneChange(line_sensors_t line_sensors){
-	static bool lost_line = false;
+  static bool lost_line = false;
+  float x = 0.3;
 
-	if(millis() < lane_change_start + 750){
-		lost_line = false;
-		if(right_lane_change) // turn to right
-			return { lane_change_speeds.right + 30, lane_change_speeds.left };
-		else // turn to left
-			return { lane_change_speeds.right, lane_change_speeds.left + 30 };
-	}
+  if(millis() < lane_change_start + 750){
+    lost_line = false;
+    if(right_lane_change) // turn to right
+      return {lane_change_speeds.right + 30, lane_change_speeds.left};
+    else // turn to left
+      return { lane_change_speeds.right, lane_change_speeds.left  + 30};
+  }
 
-	if(!lost_line){
-		if(line_sensors.left < Controller::LINETHRESHOLD
-			&& line_sensors.middle < Controller::LINETHRESHOLD
-			&& line_sensors.right < Controller::LINETHRESHOLD){
-			lost_line = true;
-		}
+  if(!lost_line){
+    if(line_sensors.left < Controller::LINETHRESHOLD
+      && line_sensors.middle < Controller::LINETHRESHOLD
+      && line_sensors.right < Controller::LINETHRESHOLD){
+      lost_line = true;
+    }
+  }
 
-	}
-
-	if(lost_line){
-		if(line_sensors.left > Controller::LINETHRESHOLD
-				|| line_sensors.middle > Controller::LINETHRESHOLD
-				|| line_sensors.right > Controller::LINETHRESHOLD)
-			state = LINE_FOLLOW;
-	}
-
-	return { target_speed , target_speed };
+  if(lost_line){
+    //if(line_sensors.left > Controller::LINETHRESHOLD
+        //|| line_sensors.middle > Controller::LINETHRESHOLD
+        //|| line_sensors.right > Controller::LINETHRESHOLD)
+     if(line_sensors.middle > Controller::LINETHRESHOLD)
+        state = LINE_FOLLOW;
+  }
+  return { target_speed , target_speed };
 
 }
 
