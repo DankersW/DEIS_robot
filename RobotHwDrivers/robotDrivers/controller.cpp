@@ -14,7 +14,9 @@ Controller::Controller(pos_t start, encoder_t encoders)
 	, left_encoder(Encoder(-32768, 32767))
 	, right_encoder(Encoder(-32768, 32767))
 	, right_lane_change(false)
-	, lane_change_start(0) {
+	, lane_change_start(0)
+	, e(0)
+	, last_e(0){
 
     velocity = {0};
     waypoint = {0};
@@ -116,29 +118,6 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 
 
 bool Controller::startLaneChange(bool right, uint8_t rad_cm){
-#if 0
-	if(state != LINE_FOLLOW){
-		return false;
-	}
-	pos_t waypoint;
-	double ang = M_PI_2 - acos(21/rad_cm);
-	//rad_mm*cos(ang) = distance_track
-	// set waypoint
-	if(right){
-		waypoint.x = position.x + 35*cos(position.theta - M_PI/6);
-		waypoint.y = position.y + 35*sin(position.theta - M_PI/6);
-	}
-	else{ // left
-		waypoint.x = position.x + 35*cos(position.theta + M_PI/6);
-		waypoint.y = position.y + 35*sin(position.theta + M_PI/6);
-	}
-	waypoint.theta = position.theta;
-
-	//Serial.println("waypoint x: " + String(waypoint.x) + "waypoint y: " + String(waypoint.y));
-
-	setWaypoint(waypoint);
-#endif
-
 	lane_change_speeds = robot.getWheelSpeeds();
 	right_lane_change = right;
 	lane_change_start = millis();
@@ -221,6 +200,57 @@ void Controller::startLineFollow(int speed){
 /************************************************************************/
 /* Linefollow. Will be called repeatedly when in linefollow state       */
 /************************************************************************/
+
+encoder_t Controller::lineFollow(line_sensors_t sensor,int distance){
+	static int16_t v_left = 0;
+	static int16_t v_right = 0;
+	int i;
+	int lost_line = true;
+	int16_t s[3];
+	s[0] = sensor.left;
+	s[1] = sensor.middle;
+	s[2] = sensor.right;
+	for (i = 0; i < 3; i++) {
+	if (s[i] > LINETHRESHOLD)
+	  lost_line = false;
+	}
+
+	if (lost_line) {
+		if (e < 0)
+		  e = -100;
+		else
+		  e = 100;
+	}
+	else {
+		if((s[0] + s[1] + s[2]) != 0)
+			e = (- 100L * s[0] + 100L * s[2]) / (s[0] + s[1] + s[2]);
+	}
+
+	v_left  = target_speed + (int16_t)((kp * e)  + kd*(e-last_e));
+	v_right = target_speed - (int16_t)((kp * e)  + kd*(e-last_e));
+	//int speedDifference = e / 4;// + 6 * (e - last_e);
+	//Serial.println("e: " + String(e) + " last e: " + String(last_e));
+	  //v_left = target_speed + speedDifference;
+	  //v_right = target_speed - speedDifference;
+
+	  if (v_left < 0)
+		  v_left = 0;
+	  if (v_right < 0)
+		  v_right = 0;
+	  if (v_left > MAX_SPEED)
+		  v_left = MAX_SPEED;
+	  if (v_right > MAX_SPEED)
+		  v_right = MAX_SPEED;
+
+	last_e = e;
+	//Serial.println("left: " + String(s[0]) + " middle: " + String(s[1]) + " right: " + String(s[2]) + " e: " + String(e) + "v left:" + String(v_left) + "v right: " + String(v_right));
+
+
+	encoder_t ret_vel = {v_right, v_left};
+	return ret_vel;
+// now set your motor speeds to v_left and v_right
+}
+#if 0
 encoder_t Controller::lineFollow(line_sensors_t sensor,int distance){
 	static int16_t v_left = 0;
 	static int16_t v_right = 0;
@@ -255,7 +285,7 @@ encoder_t Controller::lineFollow(line_sensors_t sensor,int distance){
 	encoder_t ret_vel = {v_left, v_right};
 	return ret_vel;
 }
-
+#endif
 /************************************************************************/
 /* Only drives on fused position                                        */
 /************************************************************************/

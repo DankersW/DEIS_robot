@@ -111,16 +111,6 @@ void Robot::readSensors(Controller c){
 	
 	//Serial.println("\tleftEnc: "+ String(vals.left) + "\trightEnc: " + String(vals.right) + "\tIR L: " + String(linevals.left) + "\tIR M: " + String(linevals.middle) + "\tIR R: " + String(linevals.right) + "\tleft V: " + String(velocity.left) + "\tRight V: " + String(velocity.right));
 
-#ifdef TODO
-	if(velocity.left == 0 && velocity.right == 0 ){
-		CommandStop commandStop = CommandStop(0);
-		commandStop.execute();
-		}else{
-		int intaWheelSpeed[2] = {int(velocity.left), int(velocity.right)};
-		driveWheels(intaWheelSpeed);
-	}
-#endif
-	
 }
 
 

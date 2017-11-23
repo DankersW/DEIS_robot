@@ -1,45 +1,19 @@
-#include <RedBot.h>
-#include "command.h"
-#include "command_factory.h"
-#include "pin_header.h"
-#include "controller.h"
-#include "robot.h"
-#include "heartbeat.h"
-#include "Wire.h"
+/*
+ * i2c.cpp
+ *
+ *  Created on: Nov 22, 2017
+ *      Author: daniel
+ */
+#if 0
+#include <Wire.h>
 
 
-#define SLAVE_ADDRESS 0x04
-
-Heartbeat heart_beat = Heartbeat();
-uint64_t last_lane_change;
-bool right = true;
-uint8_t buf[20];
-uint8_t len;
-bool data_available = false;
-
-
-
-// callback for received data
-void receiveData(int byteCount){
-	uint8_t index = 0;
-	//Serial.print(byteCount);
-	while(byteCount--){
-		data_available = true;
-		buf[index++] = Wire.read();
-		//Serial.println(buf[index-1]);
-	}
-	len = index;
-//Serial.println("len = " + String(len));
-	data_available = true;
-}
 
 // callback for sending data
 // Dont do extra work here.
-void sendData(){
+void sendDatax(){
 	int16_t theta;
-	int16_t x;
-	int16_t y;
-  int16_t distance_ultra;
+	int16_t distance_ultra;
 	pos_t p;
 	//Serial.print("Sending cmd :");
 	//Serial.println(buf[0]);
@@ -87,9 +61,25 @@ void sendData(){
 //Wire.write(buf[0]);
 }
 
+
+// callback for received data
+void receiveDatax(int byteCount){
+	uint8_t index = 0;
+	//Serial.print(byteCount);
+	while(byteCount--){
+		data_available = true;
+		buf[index++] = Wire.read();
+		//Serial.println(buf[index-1]);
+	}
+	len = index;
+//Serial.println("len = " + String(len));
+	data_available = true;
+}
+
+
 void readData(){
   int16_t theta;
-  uint16_t in;
+
   if(data_available){
     int16_t x;
     int16_t y;
@@ -134,26 +124,23 @@ void readData(){
       break;
     case 0x30: // request Ultrasound
       break;
-    case 0x40: //turn on buzzer with a frequentie. state0=NoTone state1=1Khz state2=2Khz tone
+    case 0x40: //turn on buzzer with a frequency. state0=NoTone state1=1Khz state2=2Khz tone
       robot.buzzer(buf[1]);
       break;
-
-	case 0x61:
-		in = buf[1] | buf[2]<<8;
-		controller.kd = ((float)in)/10;
-		break;
-	case 0x62:
-		controller.kp = ((float)buf[1])/10;
-		break;
     }
   }
 }
 
 
 
-void setup() {
-	Serial.begin(9600);
-	Serial.setTimeout(0);
+I2C::I2C()
+	: I2C(sendDatax, receiveDatax){
+}
+
+
+I2C::I2C( void(*sendData)(), void(*receiveData)(int))
+: sendData(sendData)
+, receiveData(receiveData){
 
 	// initialize i2c as slave
 	Wire.begin(SLAVE_ADDRESS);
@@ -161,60 +148,5 @@ void setup() {
 	// define callbacks for i2c communication
 	Wire.onReceive(receiveData);
 	Wire.onRequest(sendData);
-
-	pinMode(12, INPUT_PULLUP); //onboard button
-
-	while (!Serial); // wait for serial port to connect. Needed for native USB port only
-	robot.angleScoop(2);
-  
-	controller.startLineFollow(80); //
-	//controller.startLaneChange(true, 35);
 }
-
-
-static void readSerial(){
-	static String serial_input = "";
-	int data = 0;
-	
-	if(Serial.available()){
-		data = Serial.read();
-
-		if(data == '\n'){  // newline received on the channel
-			Command *cmd = CommandCreator::parse(serial_input);
-			cmd->execute();
-
-			Serial.println("DEBUG,serialInput: |" + String(serial_input) + "|");
-			
-			serial_input = "";
-			delete cmd;
-		}
-		else{
-			serial_input += char(data);
-		}
-	}
-}
-
-void loop() {
-  // read data/commands from PI
-	static int i = 0;
-	readData();
-
- 
-	// read sensors
-	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();
-	line_sensors_t		line_sensors	  = robot.readLineSensors();
-	int16_t           object_distance = 100;//robot.readUltraSound();
-  
-	// update controller
-	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance);
-	//if(i++ >= 1000){
-		//Serial.println("distance: " + String(object_distance) + " Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
-		//i = 0;
-	//}
-	// update hardware
-	robot.setMotorSpeed(speeds.left, speeds.right);
- 
-	// send heartbeat to python
-	//heart_beat.update(object_distance);
-}
-
+#endif

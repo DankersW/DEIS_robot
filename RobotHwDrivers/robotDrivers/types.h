@@ -2,9 +2,10 @@
 #define _TYPES_H_
 #include <stdint.h>
 typedef struct line_sensors{
-	int left;
-	int middle;
-	int right;
+
+	int16_t left;
+	int16_t middle;
+	int16_t right;
 
 	struct line_sensors operator=(struct line_sensors o){
 		return o;
