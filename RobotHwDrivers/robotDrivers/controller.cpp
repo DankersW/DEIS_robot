@@ -90,13 +90,15 @@ encoder_t Controller::updateEncoders(encoder_t encoder_new){
 
 #endif
 
-encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors, int distance){
+encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors, int distance, int v[2]){
 	encoder_t deltas = encoder_new - encoders;
 	deltas = updateEncoders(deltas);
 
 	//Serial.println("delt-l: " + String(deltas.left) + " delt-r: " + String(deltas.right));
 	updatePosition(deltas);
 
+  avgWheelSpeed[0] = v[0];
+  avgWheelSpeed[1] = v[1];
 
 	if(distance < 10){ //object detected less then 20 cm in front
     robot.angleScoop(0);
@@ -119,7 +121,8 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 
 
 bool Controller::startLaneChange(bool right, uint8_t rad_cm){
-	lane_change_speeds = {75,75} ;//robot.getWheelSpeeds(); 
+  lane_change_speeds = {avgWheelSpeed[0], avgWheelSpeed[1]};
+	//lane_change_speeds = {75,75} ;//robot.getWheelSpeeds(); 
 	right_lane_change = right;
 	lane_change_start = millis();
 	state = LANE_CHANGE;
@@ -128,14 +131,22 @@ bool Controller::startLaneChange(bool right, uint8_t rad_cm){
 
 encoder_t Controller::laneChange(line_sensors_t line_sensors){
   static bool lost_line = false;
-  float x = 0.3;
+  float x = 1.4;
+
+//  if(millis() < lane_change_start + 750){
+//    lost_line = false;
+//    if(right_lane_change) // turn to right
+//      return {lane_change_speeds.right + 30, lane_change_speeds.left};
+//    else // turn to left
+//      return { lane_change_speeds.right, lane_change_speeds.left  + 30};
+//  }
 
   if(millis() < lane_change_start + 750){
     lost_line = false;
     if(right_lane_change) // turn to right
-      return {lane_change_speeds.right + 30, lane_change_speeds.left};
+      return {int(lane_change_speeds.right * x), lane_change_speeds.left};
     else // turn to left
-      return { lane_change_speeds.right, lane_change_speeds.left  + 30};
+      return { lane_change_speeds.right, int(lane_change_speeds.left  * x)};
   }
 
   if(!lost_line){

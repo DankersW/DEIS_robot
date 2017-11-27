@@ -42,6 +42,7 @@ public:
     static const  	 int	    MAX_SPEED			  = 150;
 	                   float    kp              = 1.7; 
 	                   float    kd              = 45; // for a speed of 90
+                     
 
 	float e;
 	float last_e;
@@ -50,6 +51,7 @@ public:
     static const int CHANNEL = 1;
     pos_t waypoint;
     pos_t position;
+  int avgWheelSpeed[2]= {};
     
     Controller(pos_t start = {0}, encoder_t encoders = {0});
     void updatePosition(encoder_t encoder_deltas);
@@ -59,7 +61,7 @@ public:
 	/**
 	 * General update function. Will behave different depending on controller state. 
 	 */
-    encoder_t update(encoder_t encoder_new, line_sensors_t line_sensors, int distance);
+    encoder_t update(encoder_t encoder_new, line_sensors_t line_sensors, int distance, int v[2]);
 
 
     void setWaypoint(pos_t i);

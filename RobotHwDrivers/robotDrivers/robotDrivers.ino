@@ -16,6 +16,8 @@ bool right = true;
 uint8_t buf[20];
 uint8_t len;
 bool data_available = false;
+int speedMemory[30][2] = {0}; //[x][0] == right wheel; [x][1] == left wheel
+int avgSpeedWheel[2] = {0};
 
 
 
@@ -149,7 +151,33 @@ void readData(){
   }
 }
 
+void fillArray(){
+//fill speedMemory array with fixed values --> needed to lane change in the begining
+  for(int i = 0; i < 30; i++){
+    speedMemory[i][0] = 75;
+    speedMemory[i][1] = 75;
+  }
+}
 
+void calcAvgSpeed(){
+  int rightAvgHelper = 0;
+  int leftAvgHelper = 0;
+
+  int del1 = 0;
+  int del2 = 0;
+  
+  //Serial.println("CALC AVG");
+  for(int i = 0; i < 30; i++){
+    //Serial.print(i);
+    rightAvgHelper += speedMemory[i][0];
+    leftAvgHelper  += speedMemory[i][1];
+    //Serial.println(": " + String(speedMemory[i][0]) + "," + String(speedMemory[i][1]));
+  }
+  avgSpeedWheel[0] = rightAvgHelper/30;
+  avgSpeedWheel[1] = leftAvgHelper/30;
+
+  //Serial.println("AVG right: " + String(del1) + "\t AVG left: " + String(del2));
+}
 
 void setup() {
 	Serial.begin(9600);
@@ -166,6 +194,8 @@ void setup() {
 
 	while (!Serial); // wait for serial port to connect. Needed for native USB port only
 	robot.angleScoop(2);
+
+  fillArray();
   
 	controller.startLineFollow(90); //
 	//controller.startLaneChange(true, 35);
@@ -195,25 +225,38 @@ static void readSerial(){
 }
 
 void loop() {
-  // read data/commands from PI
-	static int i = 0;
+  static int i = 0;
+  
+  // read data/commands from PI	
 	readData();
 
- 
 	// read sensors
 	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();
 	line_sensors_t		line_sensors	  = robot.readLineSensors();
 	int16_t           object_distance = 100;//robot.readUltraSound();
+
+  //Serial.println("AVG right: " + String(avgSpeedWheel[0]) + "\t AVG right: " + String(avgSpeedWheel[1]));
   
 	// update controller
-	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance);
+  calcAvgSpeed();
+	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance, avgSpeedWheel);
+  
+ 
 	//if(i++ >= 1000){
 		//Serial.println("distance: " + String(object_distance) + " Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
 		//i = 0;
 	//}
 	// update hardware
 	robot.setMotorSpeed(speeds.left, speeds.right);
- 
+
+  //update the speedMemory array with the nex values
+  if(i == 29){
+    i = 0;
+  }
+  speedMemory[i][0] = speeds.right;
+  speedMemory[i][1] = speeds.left;
+  i++;
+  
 	// send heartbeat to python
 	//heart_beat.update(object_distance);
 }
