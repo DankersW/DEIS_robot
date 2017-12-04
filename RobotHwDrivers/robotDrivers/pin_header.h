@@ -11,7 +11,11 @@
 #define    R_PWM     6
 
 // Ultra sound
-#define    TRIGGER   A0
-#define    ECHO      A1
+//#define    TRIGGER   A0
+//#define    ECHO      A1
+#define TRIGGER_PIN   A0 // Arduino pin tied to trigger pin on ping sensor.
+#define ECHO_PIN      A1 // Arduino pin tied to echo pin on ping sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+
 
 #endif

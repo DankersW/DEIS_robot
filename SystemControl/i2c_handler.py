@@ -19,22 +19,30 @@ class I2CHandler:
 
         
     def setGPS(self, x,y,theta):
-        result = wiringpi.wiringPiI2CWriteReg16(fd,0x10,x)
+        result = wiringpi.wiringPiI2CWriteReg16(self.file_descriptor,0x10,x) #og: fd???
         if result == -1:
             print "Error writing. errno: ", result
         else:
             print "Set x to: ", x
         
-        result = wiringpi.wiringPiI2CWriteReg16(fd,0x12,y)
+        result = wiringpi.wiringPiI2CWriteReg16(self.file_descriptor,0x12,y)
         if result == -1:
             print "Error writing. errno: ", result
         else:
             print "Set y to: ", y
         
-        result = wiringpi.wiringPiI2CWriteReg16(fd,0x14,int(theta*1000))
+        result = wiringpi.wiringPiI2CWriteReg16(self.file_descriptor,0x14,int(theta*1000))
         if result == -1:
             print "Error writing. errno: ", result
         else:
             print "Set y to: ", y
+
+    def get_ultrasound(self):
+        result = wiringpi.wiringPiI2CReadReg8(self.file_descriptor, 0x30)
+        if result == -1:
+            print "Error writing. errno: ", result
+        else:
+            print "get UltraSound :" + str(result)
+
         
     

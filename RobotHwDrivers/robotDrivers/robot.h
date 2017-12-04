@@ -31,9 +31,10 @@ class Robot
 	RedBotSensor right_line_sensor;
 	Motor left_motor;
 	Motor right_motor;
-	NewPing sonar;
+	
 
  public:
+  
 	line_sensors_t readLineSensors();
 	encoder_t readWheelEncoders();
 	void angleScoop(int mode);
@@ -44,7 +45,10 @@ class Robot
 	void clearWheelEncoders();
 	void readSensors(Controller c);
 	int  readUltraSound();
+  void echoCheck();
+  
 	void buzzer(int state);
+ 
 
  
 	Robot();

@@ -7,6 +7,8 @@
 #include "heartbeat.h"
 #include "Wire.h"
 
+#include <NewPing.h>
+
 #define SLAVE_ADDRESS 0x04
 
 bool ultra_sonic = true;
@@ -20,6 +22,18 @@ int speedMemory[30][2] = {0}; //[x][0] == right wheel; [x][1] == left wheel
 int avgSpeedWheel[2] = {0};
 
 
+int16_t           object_distance;
+
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+unsigned int pingSpeed = 50; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
+unsigned long pingTimerUltra;     // Holds the next ping time.
+
+void echoCheck() { // Timer2 interrupt calls this function every 24uS where you can check the ping status.
+  if (sonar.check_timer()) { // This is how you check to see if the ping was received.
+    object_distance =  sonar.ping_result / US_ROUNDTRIP_CM;
+  }
+}
 
 // callback for received data
 void receiveData(int byteCount){
@@ -73,8 +87,8 @@ void sendData(){
 		//Wire.write(201);
 		break;
 	case 0x30: //ultra sound sent back if a object is between below the threshold ( value 1)
-	  distance_ultra = robot.readUltraSound();
-    if(distance_ultra < 40){
+	  //distance_ultra = robot.readUltraSound();
+    if(object_distance < 60){
       Wire.write(1);
     }
     else{
@@ -202,6 +216,8 @@ void setup() {
   
 	controller.startLineFollow(90); //
 	//controller.startLaneChange(true, 35);
+
+  pingTimerUltra = millis(); // Start now.
 }
 
 
@@ -236,17 +252,16 @@ void loop() {
 	// read sensors
 	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();
 	line_sensors_t		line_sensors	  	= robot.readLineSensors();
-	int16_t           object_distance;
+	//int16_t           object_distance = robot.readUltraSound();;
 
-	if(ultra_sonic){
-		object_distance = robot.readUltraSound();
-	}
-	else{
-		object_distance = 100;
-	}
+  
+  if (millis() >= pingTimerUltra) {   // pingSpeed milliseconds since last ping, do another ping.
+    pingTimerUltra += pingSpeed;      // Set the next ping time.
+    sonar.ping_timer(echoCheck); // Send out the ping, calls "echoCheck" function every 24uS where you can check the ping status.
+  }
 
   //Serial.println("AVG right: " + String(avgSpeedWheel[0]) + "\t AVG right: " + String(avgSpeedWheel[1]));
-	Serial.println(object_distance);
+	//Serial.println(object_distance);
 	// update controller
   calcAvgSpeed();
 	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance, avgSpeedWheel);
