@@ -39,7 +39,7 @@ public:
     static constexpr double   K2              = 1;
     static const     int	    LINETHRESHOLD	  = 800; // Threshold value for IR sensors
     static const     int32_t  ENCODER_MAX     = 0x7fff;
-    static const  	 int	    MAX_SPEED			  = 150;
+    static const  	 int	    MAX_SPEED			  = 255;
 	                   float    kp              = 1.7; 
 	                   float    kd              = 45; // for a speed of 90
                      

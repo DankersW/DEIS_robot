@@ -12,12 +12,13 @@ Robot::Robot()
 	, left_line_sensor(RedBotSensor(A3))// initialize a IRsensor object on A3 ~left
 	, middle_line_sensor(RedBotSensor(A6)) // initialize a IRsensor object on A6 ~middle
 	, right_line_sensor(RedBotSensor(A7))  // initialize a IRsensor object on A7 ~right
+	, sonar(TRIGGER, ECHO, 200)
 
 {
   // setup Ultra sound
-  pinMode(TRIGGER, OUTPUT);
-  pinMode(ECHO, INPUT);
-  digitalWrite(TRIGGER, 0);
+  //pinMode(TRIGGER, OUTPUT);
+  //pinMode(ECHO, INPUT);
+  //digitalWrite(TRIGGER, 0);
 
   //setup buzzer pin
   pinMode(11, OUTPUT);
@@ -55,19 +56,32 @@ void Robot::angleScoop(int mode){
 	}
 }
 int Robot::readUltraSound(){
-  int distance; 
+  static int distance;
   long duration;
+  static long trigger_start = -1;
   
-  digitalWrite(TRIGGER, HIGH);
-  delayMicroseconds(20); // needed for correct readings
-  digitalWrite(TRIGGER, LOW);
-  duration = pulseIn(ECHO, HIGH);
-  distance = (duration/2) / 29.1;
-  
+  /*
+  if(trigger_start < 0){
+	  digitalWrite(TRIGGER, HIGH);
+	  trigger_start = millis();
+  }
+  else if(trigger_start + 1 >= millis()){
+	  //delayMicroseconds(20); // needed for correct readings
+	  trigger_start = -1;
+	  digitalWrite(TRIGGER, LOW);
+	  duration = pulseIn(ECHO, HIGH);
+	  distance = (duration/22) / 29.1;
+  }
+  */
+  //distance
+  int temp = sonar.ping_cm();
+  if(temp != 0)
+	  distance = temp;
   return distance;
 }
 
 void Robot::buzzer(int state){
+#if 0
   noTone(11);
   if(state == 0){
     noTone(11);
@@ -78,6 +92,7 @@ void Robot::buzzer(int state){
   else if(state == 2){
     tone(11, 2000);  
   }
+#endif
 }
 
 

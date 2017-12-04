@@ -97,11 +97,11 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 	//Serial.println("delt-l: " + String(deltas.left) + " delt-r: " + String(deltas.right));
 	updatePosition(deltas);
 
-  avgWheelSpeed[0] = v[0];
-  avgWheelSpeed[1] = v[1];
+	avgWheelSpeed[0] = v[0];
+	avgWheelSpeed[1] = v[1];
 
 	if(distance < 10){ //object detected less then 20 cm in front
-    robot.angleScoop(0);
+    //robot.angleScoop(0);
 	  return{0};
 	}
 	

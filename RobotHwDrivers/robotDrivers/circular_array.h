@@ -7,14 +7,26 @@
 
 #ifndef CIRCULAR_ARRAY_H_
 #define CIRCULAR_ARRAY_H_
+#include <stddef.h>
 
 template<typename T>
 class CircularArray{
 public:
-	explicit CircularArray(size_t size);
-	~CircularArray();
+	explicit CircularArray(size_t size)
+		: size(size)
+		, head(0)
+		, tail(0) {
+		buffer = new T[size];
+	};
+	//explicit CircularArray(size_t size, T init);
+	~CircularArray(){
+		delete[] buffer;
+	};
 
-	size_t write(const T * src, size_t n);
+	size_t write(const T * src, size_t n){
+	    //\fn void *memcpy(void *dest, const void *src, size_t len)
+		//memcpy()
+	};
 	size_t read(T * dest, size_t n);
 
 private:

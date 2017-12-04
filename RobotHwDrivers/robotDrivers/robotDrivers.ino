@@ -7,9 +7,9 @@
 #include "heartbeat.h"
 #include "Wire.h"
 
-
 #define SLAVE_ADDRESS 0x04
 
+bool ultra_sonic = true;
 Heartbeat heart_beat = Heartbeat();
 uint64_t last_lane_change;
 bool right = true;
@@ -147,6 +147,9 @@ void readData(){
 	case 0x62:
 		controller.kp = ((float)buf[1])/10;
 		break;
+    case 0x70:
+    	ultra_sonic = (buf[1] == 1);
+    	break;
     }
   }
 }
@@ -232,11 +235,18 @@ void loop() {
 
 	// read sensors
 	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();
-	line_sensors_t		line_sensors	  = robot.readLineSensors();
-	int16_t           object_distance = 100;//robot.readUltraSound();
+	line_sensors_t		line_sensors	  	= robot.readLineSensors();
+	int16_t           object_distance;
+
+	if(ultra_sonic){
+		object_distance = robot.readUltraSound();
+	}
+	else{
+		object_distance = 100;
+	}
 
   //Serial.println("AVG right: " + String(avgSpeedWheel[0]) + "\t AVG right: " + String(avgSpeedWheel[1]));
-  
+	Serial.println(object_distance);
 	// update controller
   calcAvgSpeed();
 	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance, avgSpeedWheel);
