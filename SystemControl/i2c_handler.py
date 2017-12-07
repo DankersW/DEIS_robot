@@ -40,9 +40,38 @@ class I2CHandler:
     def get_ultrasound(self):
         result = wiringpi.wiringPiI2CReadReg8(self.file_descriptor, 0x30)
         if result == -1:
+            return result
+        else:
+            return result
+
+    def set_idleState(self):
+        result = wiringpi.wiringPiI2CWriteReg8(self.file_descriptor, 0x80, 1)
+        if result == -1:
             print "Error writing. errno: ", result
         else:
-            print "get UltraSound :" + str(result)
+            print "State set to IDLE"
+
+    def set_laneChange(self, direction):
+        result = wiringpi.wiringPiI2CWriteReg8(self.file_descriptor, 0x22, direction)
+        if result == -1:
+            print "Error writing. errno: ", result
+        else:
+            print "Changing lane to: ", direction
+
+    def set_tone(self, tone):
+        result = wiringpi.wiringPiI2CWriteReg8(self.file_descriptor, 0x40, tone)
+        if result == -1:
+            print "Error writing. errno: ", result
+        else:
+            print "Setting tone to: ", tone
+
+    def set_scoop(self, scoop):
+        result = wiringpi.wiringPiI2CWriteReg8(self.file_descriptor, 1, scoop)
+        if result == -1:
+            print "Error writing. errno: ", result
+        else:
+            print "Setting scoop to: ", scoop
+
 
         
     

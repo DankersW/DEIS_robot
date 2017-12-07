@@ -40,12 +40,17 @@ public:
     static const     int	    LINETHRESHOLD	  = 800; // Threshold value for IR sensors
     static const     int32_t  ENCODER_MAX     = 0x7fff;
     static const  	 int	    MAX_SPEED			  = 255;
-	                   float    kp              = 1.7; 
-	                   float    kd              = 45; // for a speed of 90
-                     
+	                   float    kp              = 0.8; 
+	                   float    kd              = 700; // for a speed of 90
+                     float    ke              = 0.9;
+                     float    kdd             = 0;
 
 	float e;
 	float last_e;
+  float ed;
+  float last_ed;
+  float last_vel_right;
+  float last_vel_left;
     double vel_lin = 0;
     double vel_max = 2;
     static const int CHANNEL = 1;
@@ -67,6 +72,7 @@ public:
     void setWaypoint(pos_t i);
 	bool startLaneChange(bool right, uint8_t rad_cm);
 	void startLineFollow(int speed);
+  void setStateToIdle();
 
 	/**
 	 * theta will be resized with / 1000

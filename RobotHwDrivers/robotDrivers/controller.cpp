@@ -15,8 +15,10 @@ Controller::Controller(pos_t start, encoder_t encoders)
 	, right_encoder(Encoder(-32768, 32767))
 	, right_lane_change(false)
 	, lane_change_start(0)
-	, e(0)
-	, last_e(0){
+  , e(0)
+  , last_e(0)
+  , ed(0)
+  , last_ed(0){
 
     velocity = {0};
     waypoint = {0};
@@ -25,6 +27,10 @@ Controller::Controller(pos_t start, encoder_t encoders)
 void Controller::setWaypoint(pos_t i){;
   waypoint.x = i.x;
   waypoint.y = i.y;
+}
+
+void Controller::setStateToIdle(){
+  state = IDLE;
 }
 
 void Controller::updateGPS(int16_t x, int16_t y, int16_t theta){
@@ -100,7 +106,7 @@ encoder_t Controller::update(encoder_t encoder_new, line_sensors_t line_sensors,
 	avgWheelSpeed[0] = v[0];
 	avgWheelSpeed[1] = v[1];
 
-	if(distance < 10){ //object detected less then 20 cm in front
+	if(distance < 15){ //object detected less then 20 cm in front
     //robot.angleScoop(0);
 	  return{0};
 	}
@@ -131,7 +137,7 @@ bool Controller::startLaneChange(bool right, uint8_t rad_cm){
 
 encoder_t Controller::laneChange(line_sensors_t line_sensors){
   static bool lost_line = false;
-  float x = 1.4;
+  float x = 0.7;
 
 //  if(millis() < lane_change_start + 750){
 //    lost_line = false;
@@ -144,9 +150,9 @@ encoder_t Controller::laneChange(line_sensors_t line_sensors){
   if(millis() < lane_change_start + 750){
     lost_line = false;
     if(right_lane_change) // turn to right
-      return {int(lane_change_speeds.right * x), lane_change_speeds.left};
+      return {lane_change_speeds.right, int(lane_change_speeds.left  * x)};
     else // turn to left
-      return { lane_change_speeds.right, int(lane_change_speeds.left  * x)};
+      return { int(lane_change_speeds.right * x), lane_change_speeds.left};
   }
 
   if(!lost_line){
@@ -236,9 +242,12 @@ encoder_t Controller::lineFollow(line_sensors_t sensor,int distance){
 		if((s[0] + s[1] + s[2]) != 0)
 			e = (- 100L * s[0] + 100L * s[2]) / (s[0] + s[1] + s[2]);
 	}
+  ed = e-last_e;
+	v_left  = target_speed + (int16_t)((kp * e)  + kd*(ed) + kdd*(ed-last_ed));
+	v_right = target_speed - (int16_t)((kp * e)  + kd*(ed) + kdd*(ed-last_ed));
 
-	v_left  = target_speed + (int16_t)((kp * e)  + kd*(e-last_e));
-	v_right = target_speed - (int16_t)((kp * e)  + kd*(e-last_e));
+  
+
 	//int speedDifference = e / 4;// + 6 * (e - last_e);
 	//Serial.println("e: " + String(e) + " last e: " + String(last_e));
 	  //v_left = target_speed + speedDifference;
@@ -252,8 +261,13 @@ encoder_t Controller::lineFollow(line_sensors_t sensor,int distance){
 		  v_left = MAX_SPEED;
 	  if (v_right > MAX_SPEED)
 		  v_right = MAX_SPEED;
-
+      
+  v_left = int(v_left - ((v_left - last_vel_left) * ke));
+  v_right = int(v_right - ((v_right - last_vel_right) * ke));
 	last_e = e;
+  last_ed = ed;
+  last_vel_right = v_right;
+  last_vel_left = v_left;
 	//Serial.println("left: " + String(s[0]) + " middle: " + String(s[1]) + " right: " + String(s[2]) + " e: " + String(e) + "v left:" + String(v_left) + "v right: " + String(v_right));
 
 

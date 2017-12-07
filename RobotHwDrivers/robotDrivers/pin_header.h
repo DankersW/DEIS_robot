@@ -17,5 +17,7 @@
 #define ECHO_PIN      A1 // Arduino pin tied to echo pin on ping sensor.
 #define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
+#define BUZZER_PIN 11
+
 
 #endif

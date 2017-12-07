@@ -18,7 +18,7 @@ bool right = true;
 uint8_t buf[20];
 uint8_t len;
 bool data_available = false;
-int speedMemory[30][2] = {0}; //[x][0] == right wheel; [x][1] == left wheel
+int speedMemory[120][2] = {0}; //[x][0] == right wheel; [x][1] == left wheel
 int avgSpeedWheel[2] = {0};
 
 
@@ -144,33 +144,46 @@ void readData(){
       break;
     case 0x20: //lanefollow with speed
       controller.startLineFollow(buf[1]);
+      robot.buzzer(0);
       break;
     case 0x22: //lane change with direction
       controller.startLaneChange(buf[1]==1, 35);
       break;
     case 0x30: // request Ultrasound
       break;
-    case 0x40: //turn on buzzer with a frequentie. state0=NoTone state1=1Khz state2=2Khz tone
+    case 0x40: //turn on buzzer with a frequentie. state0=NoTone state1=annoying sound
       robot.buzzer(buf[1]);
       break;
 
 	case 0x61:
 		in = buf[1] | buf[2]<<8;
-		controller.kd = ((float)in)/10;
+		controller.kd = ((float)in)/100;
 		break;
 	case 0x62:
-		controller.kp = ((float)buf[1])/10;
+    in = buf[1] | buf[2]<<8;
+		controller.kp = ((float)in)/100;
 		break;
-    case 0x70:
-    	ultra_sonic = (buf[1] == 1);
-    	break;
-    }
+  case 0x63:
+    controller.ke = ((float)buf[1])/100;
+    break;
+  case 0x64:
+    in = buf[1] | buf[2]<<8;
+    controller.kdd = ((float)in)/10000;
+    break;
+  case 0x70:
+    ultra_sonic = (buf[1] == 1);
+    break;
+  case 0x80:
+    controller.setStateToIdle();
+    robot.buzzer(1);
+    break;
   }
+ }
 }
 
 void fillArray(){
 //fill speedMemory array with fixed values --> needed to lane change in the begining
-  for(int i = 0; i < 30; i++){
+  for(int i = 0; i < 120; i++){
     speedMemory[i][0] = 75;
     speedMemory[i][1] = 75;
   }
@@ -184,14 +197,14 @@ void calcAvgSpeed(){
   int del2 = 0;
   
   //Serial.println("CALC AVG");
-  for(int i = 0; i < 30; i++){
+  for(int i = 0; i < 120; i++){
     //Serial.print(i);
     rightAvgHelper += speedMemory[i][0];
     leftAvgHelper  += speedMemory[i][1];
     //Serial.println(": " + String(speedMemory[i][0]) + "," + String(speedMemory[i][1]));
   }
-  avgSpeedWheel[0] = rightAvgHelper/30;
-  avgSpeedWheel[1] = leftAvgHelper/30;
+  avgSpeedWheel[0] = rightAvgHelper/120;
+  avgSpeedWheel[1] = leftAvgHelper/120;
 
   //Serial.println("AVG right: " + String(del1) + "\t AVG left: " + String(del2));
 }
@@ -275,7 +288,7 @@ void loop() {
 	robot.setMotorSpeed(speeds.left, speeds.right);
 
   //update the speedMemory array with the nex values
-  if(i == 29){
+  if(i == 119){
     i = 0;
   }
   speedMemory[i][0] = speeds.right;

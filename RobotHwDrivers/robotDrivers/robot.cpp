@@ -29,7 +29,7 @@ Robot::Robot()
   //pingTimerUltra = millis(); // Start now.
 
   //setup buzzer pin
-  pinMode(11, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void Robot::stop(){
@@ -121,18 +121,12 @@ void echoCheck() { // Timer2 interrupt calls this function every 24uS where you 
 */
 
 void Robot::buzzer(int state){
-#if 0
-  noTone(11);
-  if(state == 0){
-    noTone(11);
+  if (state == 1){
+    digitalWrite(BUZZER_PIN, true);
   }
-  else if(state == 1){
-    tone(11, 1000);  
+  else{
+    digitalWrite(BUZZER_PIN, false);
   }
-  else if(state == 2){
-    tone(11, 2000);  
-  }
-#endif
 }
 
 
