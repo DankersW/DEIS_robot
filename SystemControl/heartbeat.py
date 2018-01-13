@@ -60,8 +60,8 @@ class Heartbeat:
             #rospy.init_node('g3_send', anonymous=True)
             rate = rospy.Rate(10) # 10hz
             while not rospy.is_shutdown() and self.go:
-                heartbeat_message = "3," + str(self.x) + "," + str(self.y)
-                pub_heartbeat.publish(heartbeat_message)
+                #heartbeat_message = "3," + str(self.x) + "," + str(self.y)
+                #pub_heartbeat.publish(heartbeat_message)
 
                 if(self.platoonPosFlag):
                     platoonPos_message = "3," + str(self.toFollowId)

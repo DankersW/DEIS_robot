@@ -73,6 +73,7 @@ public:
 	bool startLaneChange(bool right, uint8_t rad_cm);
 	void startLineFollow(int speed);
   void setStateToIdle();
+  int getState();
 
 	/**
 	 * theta will be resized with / 1000

@@ -72,6 +72,13 @@ class I2CHandler:
         else:
             print "Setting scoop to: ", scoop
 
+    def get_state(self):
+        result = wiringpi.wiringPiI2CReadReg8(self.file_descriptor, 0x90)
+        if result == -1:
+            return result
+        else:
+            return result
+
 
         
     

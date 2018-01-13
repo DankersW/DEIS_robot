@@ -15,9 +15,8 @@ print "Simulate receiving position data on the channel"
 with open('posDataFile.txt', 'r') as f:
     for line in f:
         h = line.strip().split(',')
-        print h
         if (len(h)==3 and representsInt(h[0]) and representsInt(h[1]) and representsInt(h[2])):
-            posData[int(h[0])-1] = [h[1], h[2]]
+            posData[int(h[0])-1] = [int(h[1]), int(h[2])]
     print posData
 
 #simulate receiving who is following who data on the channel
@@ -26,7 +25,7 @@ with open('followingDataFile.txt', 'r') as f:
     for line in f:
         h = line.strip().split(',')
         if (len(h)==2 and representsInt(h[0]) and representsInt(h[1])):
-            followingData[int(h[0])-1] = h[1]
+            followingData[int(h[0])-1] = int(h[1])
     print followingData
 
 #simulate receiving fan out to a lane data
@@ -61,3 +60,9 @@ with open('fanOut.txt', 'r') as f:
     print fanOut
 
 print ""
+
+
+def fanOutController(toGoToLane):
+    '''
+
+    '''

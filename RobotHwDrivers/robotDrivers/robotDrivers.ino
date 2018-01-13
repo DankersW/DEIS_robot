@@ -98,7 +98,13 @@ void sendData(){
 	case 0x55:
 		//Wire.write(203);
 		break;
+  case 0x90:
+    Wire.write(controller.getState());
+    break;
 	}
+
+ 
+ 
 //Wire.write(buf,len);
 //Wire.write(buf[0]);
 }

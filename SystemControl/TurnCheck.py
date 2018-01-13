@@ -32,23 +32,29 @@ class TurnCheck(object):
 
     def compute_direction(self,coord_x,coord_y,orientation):
         orient = (round(2*orientation/math.pi) * math.pi/2)
-        print orient
-        if(orientation == math.pi or orientation == -math.pi):
+        #print orient
+        self.cw = False
+
+        if(orient == math.pi or orient == -math.pi):
             if(self.DirectionLookUpTable[coord_x,coord_y] == 2 or self.DirectionLookUpTable[coord_x,coord_y] == 3):
                 self.cw = True
-        elif(orientation == math.pi/2):
+        elif(orient == math.pi/2):
             if (self.DirectionLookUpTable[coord_x, coord_y] == 1 or self.DirectionLookUpTable[coord_x, coord_y] == 2):
                self.cw = True
-        elif(orientation == -math.pi/2):
+        elif(orient == -math.pi/2):
             if (self.DirectionLookUpTable[coord_x, coord_y] == 4 or self.DirectionLookUpTable[coord_x, coord_y] == 3):
                 self.cw = True
         else:
             if (self.DirectionLookUpTable[coord_x, coord_y] == 1 or self.DirectionLookUpTable[coord_x, coord_y] == 4):
                 self.cw = True
+        if self.cw:
+            print  "cw ",
+        else:
+            print "ccw"
 
     def get_lane(self,coord_x,coord_y):
 
-        self.lane = self.LookUpTable[coord_x][coord_y]
+        self.lane = self.LookUpTable[coord_x,coord_y]
 
         if self.cw:
             if self.lane == 1:
@@ -69,16 +75,20 @@ class TurnCheck(object):
     def get_lane_switch_commands(self,Lane_to_change_to):
 
         lanechange = self.lane - Lane_to_change_to
-
+        print "self lane: ", self.lane , " lane to: ", Lane_to_change_to ,
         if(lanechange<0):
             if self.cw:
+                print "turn right cw",
                 return [0,abs(lanechange)] # right
             else:
+                print "turn left cw",
                 return [1,abs(lanechange)] # left
         elif(lanechange>0):
             if self.cw:
+                print "turn left ccw",
                 return [1,abs(lanechange)]
             else:
+                print "turn right ccw",
                 return [0,abs(lanechange)]
         else:
             return [-1,-1] # no change we are already here

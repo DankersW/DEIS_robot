@@ -19,7 +19,7 @@ class GpsClient(object):
             self.x = msg.x
             self.y = msg.y
             self.position_callback(self.x, self.y, self.theta)
-        print "x: ", self.x, " y: ", self.y, " theta: ", self.theta, " i: ", self.i
+        #print "x: ", self.x, " y: ", self.y, " theta: ", self.theta, " i: ", self.i
 
     def __init__(self, position_callback):
         self.lc = lcm.LCM("udpm://239.255.76.67:7667?ttl=1")
