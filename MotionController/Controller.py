@@ -1,78 +1,135 @@
 from Controller_lib import Pose
 from Controller_lib import Update_Pose
+from Controller_lib import Controller_Output
+
 import math
 import time
 import lcm
 import threading
+import sys
+
+
+sys.path.append('../LCM')
+from exlcm import wheel_speeds_t
 from exlcm import sensor_vals_t
 
-
-pos = Pose(0,0,0)
+pos = 0
 wheel_base = 18
 wheel_dia = 6.5
 EResol = 192
 
-
 #Controller parameters
-k1 = 0;
-k2 = 2;
-Vel_max = 10;
-Stop_dist = 2;
-vel_l = 0;
-vel_r = 0;
 
-control_param = [k1,k2,Vel_max,Stop_dist]
+k1 = 0
+k2 = 2
+Vel_max = 1
+Stop_dist = 20
+subscription = 0
+#ListenThread = 0
+#SendThread = 0
 
-Enc_left_old = 0;
-Enc_right_old = 0;
-Enc_left = 0;
-Enc_right = 0;
-lc = lcm.LCM()
-run = True
-def handle_Caller():
-    while run:
-        print 'start'
-        lc.handle()
+#waypoint  = [0,0,0]
 
-def my_handler(channel, data):
-    global Enc_right_old
-    global Enc_left_old
-    msg = sensor_vals_t.decode(data)
+class MotionController(object):
+    """
+        pos = 0
+        wheel_base = 18
+        wheel_dia = 6.5
+        EResol = 192
 
-    Enc_left = msg.wheel_encoders.left
-    Enc_right = msg.wheel_encoders.right
+        #Controller parameters
 
-    dEr = Enc_right - Enc_right_old
-    dEl = Enc_left - Enc_left_old
+        k1 = 0
+        k2 = 2
+        Vel_max = 10
+        Stop_dist = 2
+        control_param = 0
+        Enc_left_old = 0
+        Enc_right_old = 0
+        Enc_left = 0
+        Enc_right = 0
+        lc = lcm.LCM()
+        ls = lcm.LCM()
+        subscription = 0
+        ListenThread = 0
+        SendThread = 0
 
-    Update_Pose(pos,dEr,dEl,wheel_dia,EResol,wheel_base)
+        waypoint  = [0,0,0]
+    """
+    def handle_Receive_Caller(self):
+        while True:
+            self.lc.handle()
 
-    Enc_left_old = Enc_left
-    Enc_right_old = Enc_right
-    
-    print("Received message on channel \"%s\"" % channel)
-    print("   timestamp   = %s" % str(msg.timestamp))
-    print("   Left    = %s" % str(msg.wheel_encoders.left))
-    print("   Right   = %s" % str(msg.wheel_encoders.right))
-    print("")
+    def receive_msg(self, channel, data):
+        global wheel_dia
+        global EResol
+        global wheel_base
+        msg = sensor_vals_t.decode(data)
 
+        self.Enc_left = msg.wheel_encoders.left
+        self.Enc_right = msg.wheel_encoders.right
 
-subscription = lc.subscribe("SENSOR", my_handler)
+        self.dEr = self.Enc_right - self.Enc_right_old
+        self.dEl = self.Enc_left - self.Enc_left_old
+        print "enc_l, enc_r",self.Enc_left,"",self.Enc_right
+        Update_Pose(self.pos, self.dEr, self.dEl, wheel_dia, EResol, wheel_base)
 
-HandleThread = threading.Thread(target=handle_Caller,args=())
-HandleThread.demon = True
-HandleThread.start()
-
-try:
-
-    while True:
-        print pos.x
-        time.sleep(1)
-       
-except KeyboardInterrupt:
-    pass    
-
-run = False
-lc.unsubscribe(subscription)
+        self.Enc_left_old = self.Enc_left
+        self.Enc_right_old = self.Enc_right
 
 
+
+    def create_send_msg(self):
+        """
+        """
+        global wheel_base
+        vel_l,vel_r = Controller_Output(self.pos,self.waypoint,self.control_param,wheel_base)
+        msg = wheel_speeds_t()
+        print "vel_l: ", vel_l, "vel_r: ", vel_r 
+        msg.wheel.left = vel_l
+        msg.wheel.right = vel_r
+
+        return msg
+
+
+    def run(self):
+
+        while True:
+            msg = self.create_send_msg()
+            self.ls.publish("COMMAND",msg.encode())
+
+
+    def setWaypoint(self,x,y,theta):
+        self.waypoint = [x,y,theta]
+
+
+    def __init__(self, init_x,init_y,init_theta):
+
+        self.control_param = 0
+        self.Enc_left_old = 0
+        self.Enc_right_old = 0
+        self.Enc_left = 0
+        self.Enc_right = 0
+        self.lc = lcm.LCM()
+        self.ls = lcm.LCM()
+        
+        self.pos = Pose(init_x,init_y,init_theta)
+        self.subscription = self.lc.subscribe("SENSOR", self.receive_msg)
+        self.control_param = [k1,k2,Vel_max,Stop_dist]
+        self.waypoint = [0,0,0]
+        self.ListenThread = threading.Thread(target=self.handle_Receive_Caller, args=())
+        self.SendThread = threading.Thread(target=self.run, args=())
+
+        self.ListenThread.demon = True
+        self.ListenThread.start()
+        self.SendThread.demon = True
+        self.SendThread.start()
+
+def main():
+    motion_controller = MotionController(0,0,0)
+    motion_controller.setWaypoint(30,0,0)
+    print "motion controller instansiated"
+
+
+if  __name__ == '__main__':
+    main()

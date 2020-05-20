@@ -4,12 +4,24 @@ Serial module
 import threading
 import time
 import mutex
+import sys
+import select
 # non-default imports
-import lcm
+#import lcm
 import serial
-#data types
-from exlcm import sensor_vals_t
 
+from serial_parser import CommandFactory
+#data types
+
+
+lock = mutex.mutex()
+
+def print2(msg):
+    global lock
+    while not lock.testandset:
+        time.sleep(0)
+    print msg
+    lock.unlock()
 
 class SerialHandler(object):
     """
@@ -17,22 +29,25 @@ class SerialHandler(object):
     Uses a mutex lock. Might not be necessary,
     all other threads will only read.
 
-    TODO: Publish data on a LCM channel.
+    TODO: Receive commands, send on uart.
     """
     #serial.Serial('/dev/ttyUSB1', baudrate=4800, timeout=1)
-    def __init__(self, port, baud):
+    def __init__(self, port, baud, target):
         self.data = 0
         self.command = 0
-        self.port = serial.Serial(port, baudrate=baud, timeout=1)
+        self.port = serial.Serial(port, baudrate=baud, timeout=5)
         self.lock = mutex.mutex()
-        self.lcm = lcm.LCM()
-
+        self.target = target
+        
         thread = threading.Thread(target=self.run, args=())
         thread.daemon = True  # Daemonize thread
         thread.start() # Start the execution
 
-
-
+    def send_message(self, msg):
+        self.port.write(msg)
+    
+    
+    
     def run(self):
         """
         Worker method.
@@ -40,33 +55,27 @@ class SerialHandler(object):
         """
         while True:
             if self.port.inWaiting():
-                print "Data found"
+                #print "Data found"
                 #Try to lock mutex
-                while not self.lock.testandset:
-                    time.sleep(1)
                 #lock aquired. Read data
                 line = self.port.readline()
                 #self.decode_line()
-                msg = SerialHandler.encode_line(line)
-                print line
-                self.lcm.publish("SENSOR", msg.encode())
-                self.lock.unlock()
+                self.parse_line(line)
+                #print line
             time.sleep(0.1)
 
-    #
-    @staticmethod
-    def encode_line(line=""):
+    def parse_line(self, line=""):
         """
         Static method.
-        takes a string of values and encodes into sensor_values_t type
+        Takes a string input and parses into a command
         """
+        print line
+        cmd = CommandFactory.create(line)
+        if cmd is None:
+            return
+        cmd.execute(self.target)
 
-        msg = sensor_vals_t()
-        msg.timestamp = int(time.time())
-        result = [x.strip() for x in line.split(',')]
-        msg.wheel_encoders.left = long(result[1])
-        msg.wheel_encoders.right = long(result[2])
-        return msg
+
 
 
 def main():
@@ -75,13 +84,12 @@ def main():
     """
 
     # Starting background thread
-    _ = SerialHandler('/dev/ttyUSB0', 4800)
-    print "starting loop"
+    _ = SerialHandler('/dev/ttyUSB1', 19200)
+    print2("starting loop")
     while True:
-        print "knock knock"
+        #print "knock knock"
         time.sleep(1)
 
 
-
-
-if  __name__ == '__main__':main()
+if  __name__ == '__main__':
+    main()

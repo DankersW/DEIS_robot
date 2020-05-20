@@ -1,226 +1,307 @@
 #include <RedBot.h>
-#include <Servo.h>
+#include "command.h"
+#include "command_factory.h"
+#include "pin_header.h"
+#include "controller.h"
+#include "robot.h"
+#include "heartbeat.h"
+#include "Wire.h"
 
-typedef struct drive_cmd
-{
-  int left;
-  int right;
-  int padding[8];
-}drive_cmd_t;
+#include <NewPing.h>
 
-typedef struct scoop_cmd
-{
-  int orientation;
-  int padding[9];
-}scoop_cmd_t;
+#define SLAVE_ADDRESS 0x04
 
-typedef struct cmd
-{
-  String type;
-  union{
-    int args[10];
-    drive_cmd_t drive_cmd;
-    scoop_cmd_t scoop_cmd;
-  };
-  int numberOfArgs;
-}cmd_t;
+bool ultra_sonic = true;
+Heartbeat heart_beat = Heartbeat();
+uint64_t last_lane_change;
+bool right = true;
+uint8_t buf[20];
+uint8_t len;
+bool data_available = false;
+int speedMemory[120][2] = {0}; //[x][0] == right wheel; [x][1] == left wheel
+int avgSpeedWheel[2] = {0};
 
-RedBotEncoder encoder = RedBotEncoder(A2, 10);  // initializes encoder on pins A2 and 10
 
-// H-Bridge motor driver pins
-#define    L_CTRL1   2
-#define    L_CTRL2   4
-#define    L_PWM     5
+int16_t           object_distance;
 
-#define    R_CTRL1   7
-#define    R_CTRL2   8
-#define    R_PWM     6
 
-RedBotSensor IRSensor0 = RedBotSensor(A3); // initialize a IRsensor object on A3 ~left
-RedBotSensor IRSensor1 = RedBotSensor(A6); // initialize a IRsensor object on A6 ~middle
-RedBotSensor IRSensor2 = RedBotSensor(A7); // initialize a IRsensor object on A7 ~right
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+unsigned int pingSpeed = 50; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
+unsigned long pingTimerUltra;     // Holds the next ping time.
 
-Servo servoRight;  // create servo object to control the Rightservo
-Servo servoLeft;  // create servo object to control the Leftservo 
+void echoCheck() { // Timer2 interrupt calls this function every 24uS where you can check the ping status.
+  if (sonar.check_timer()) { // This is how you check to see if the ping was received.
+    object_distance =  sonar.ping_result / US_ROUNDTRIP_CM;
+  }
+}
+
+// callback for received data
+void receiveData(int byteCount){
+	uint8_t index = 0;
+	//Serial.print(byteCount);
+	while(byteCount--){
+		data_available = true;
+		buf[index++] = Wire.read();
+		//Serial.println(buf[index-1]);
+	}
+	len = index;
+//Serial.println("len = " + String(len));
+	data_available = true;
+}
+
+// callback for sending data
+// Dont do extra work here.
+void sendData(){
+	int16_t theta;
+	int16_t x;
+	int16_t y;
+  int16_t distance_ultra;
+	pos_t p;
+	//Serial.print("Sending cmd :");
+	//Serial.println(buf[0]);
+	switch(buf[0]){
+	case 1:
+		Wire.write(0);
+		break;
+	case 0x10:
+		//Wire.beginTransmission();
+		p = controller.getPosition();
+		Serial.println("Sending x");
+		Wire.write(p.x_array, sizeof(p.x_array));
+		break;
+	case 0x12:
+		p = controller.getPosition();
+		Serial.println("Sending y: " + String(p.y));
+		Wire.write(p.y_array, sizeof(p.y_array));
+		break;
+	case 0x14:
+		p = controller.getPosition();
+		uint8_t buf[2];
+		theta = (int16_t)(p.theta*1000);
+
+		buf[0] = theta & 0xFF;
+		buf[1] = (theta >> 8)&0xFF;
+		Wire.write(buf, sizeof(buf));
+		break;
+	case 0x20:
+		//Wire.write(201);
+		break;
+	case 0x30: //ultra sound sent back if a object is between below the threshold ( value 1)
+	  //distance_ultra = robot.readUltraSound();
+    if(object_distance < 60){
+      Wire.write(1);
+    }
+    else{
+      Wire.write(0);
+    }
+		break;
+	case 0x55:
+		//Wire.write(203);
+		break;
+  case 0x90:
+    Wire.write(controller.getState());
+    break;
+	}
+
+ 
+ 
+//Wire.write(buf,len);
+//Wire.write(buf[0]);
+}
+
+void readData(){
+  int16_t theta;
+  uint16_t in;
+  if(data_available){
+    int16_t x;
+    int16_t y;
+    Serial.println("Cmd: " + String(buf[0]));
+    data_available = false;
+    switch(buf[0]){
+    case 1: // scoop commmand
+      robot.angleScoop(buf[1]);
+      break;
+    case 0x10:
+      if(len < 3){
+        Serial.println("Reg: " + String(buf[0]) + " not enough data. Len = " + String(len));
+        break;
+      }
+      x = buf[1] | buf[2] << 8;
+      Serial.println("Setting x to: " + String(x));
+      controller.position.x = x;
+      break;
+    case 0x12:
+      if(len < 3){
+        Serial.println("Reg: " + String(buf[0]) + " Not enough data");
+        break;
+      }
+      y = buf[1] | buf[2] << 8;
+      Serial.println("Setting y to: " + String(y));
+      controller.position.y = y;
+      break;
+    case 0x14:
+      if(len < 3){
+        Serial.println("Reg: " + String(buf[0]) + "Not enough data");
+        break;
+      }
+      theta = buf[1] | buf[2] << 8;
+      controller.position.theta = ((double)theta) / 1000;
+      Serial.println("Theta set to: " + String(controller.position.theta));
+      break;
+    case 0x20: //lanefollow with speed
+      controller.startLineFollow(buf[1]);
+      robot.buzzer(0);
+      break;
+    case 0x22: //lane change with direction
+      controller.startLaneChange(buf[1]==1, 35);
+      break;
+    case 0x30: // request Ultrasound
+      break;
+    case 0x40: //turn on buzzer with a frequentie. state0=NoTone state1=annoying sound
+      robot.buzzer(buf[1]);
+      break;
+
+	case 0x61:
+		in = buf[1] | buf[2]<<8;
+		controller.kd = ((float)in)/100;
+		break;
+	case 0x62:
+    in = buf[1] | buf[2]<<8;
+		controller.kp = ((float)in)/100;
+		break;
+  case 0x63:
+    controller.ke = ((float)buf[1])/100;
+    break;
+  case 0x64:
+    in = buf[1] | buf[2]<<8;
+    controller.kdd = ((float)in)/10000;
+    break;
+  case 0x70:
+    ultra_sonic = (buf[1] == 1);
+    break;
+  case 0x80:
+    controller.setStateToIdle();
+    robot.buzzer(1);
+    break;
+  }
+ }
+}
+
+void fillArray(){
+//fill speedMemory array with fixed values --> needed to lane change in the begining
+  for(int i = 0; i < 120; i++){
+    speedMemory[i][0] = 75;
+    speedMemory[i][1] = 75;
+  }
+}
+
+void calcAvgSpeed(){
+  int rightAvgHelper = 0;
+  int leftAvgHelper = 0;
+
+  int del1 = 0;
+  int del2 = 0;
+  
+  //Serial.println("CALC AVG");
+  for(int i = 0; i < 120; i++){
+    //Serial.print(i);
+    rightAvgHelper += speedMemory[i][0];
+    leftAvgHelper  += speedMemory[i][1];
+    //Serial.println(": " + String(speedMemory[i][0]) + "," + String(speedMemory[i][1]));
+  }
+  avgSpeedWheel[0] = rightAvgHelper/120;
+  avgSpeedWheel[1] = leftAvgHelper/120;
+
+  //Serial.println("AVG right: " + String(del1) + "\t AVG left: " + String(del2));
+}
 
 void setup() {
-  Serial.begin(9600);
-  Serial.setTimeout(0);
+	Serial.begin(9600);
+	Serial.setTimeout(0);
 
-  pinMode(12, INPUT_PULLUP); //onboard button
+	// initialize i2c as slave
+	Wire.begin(SLAVE_ADDRESS);
+
+	// define callbacks for i2c communication
+	Wire.onReceive(receiveData);
+	Wire.onRequest(sendData);
+
+	pinMode(12, INPUT_PULLUP); //onboard button
+
+	while (!Serial); // wait for serial port to connect. Needed for native USB port only
+	robot.angleScoop(2);
+
+  fillArray();
   
-  //left motor
-  pinMode(L_CTRL1, OUTPUT);  
-  pinMode(L_CTRL2, OUTPUT);  
-  pinMode(L_PWM, OUTPUT); 
-    
-  //right motor
-  pinMode(R_CTRL1, OUTPUT);  
-  pinMode(R_CTRL2, OUTPUT);  
-  pinMode(R_PWM, OUTPUT); 
+	controller.startLineFollow(90); //
+	//controller.startLaneChange(true, 35);
 
-  servoRight.attach(9);  // attaches the servo on pin 9 to the servo object
-  servoLeft.attach(3);   // attaches the servo on pin 3 to the servo object
-  servoRight.write(180);  //bring servo's to a
-  servoLeft.write(0);     //safe start postion
-  
-  delay(1000);
+  pingTimerUltra = millis(); // Start now.
+}
 
-  while (!Serial); // wait for serial port to connect. Needed for native USB port only
+
+static void readSerial(){
+	static String serial_input = "";
+	int data = 0;
+	
+	if(Serial.available()){
+		data = Serial.read();
+
+		if(data == '\n'){  // newline received on the channel
+			Command *cmd = CommandCreator::parse(serial_input);
+			cmd->execute();
+
+			Serial.println("DEBUG,serialInput: |" + String(serial_input) + "|");
+			
+			serial_input = "";
+			delete cmd;
+		}
+		else{
+			serial_input += char(data);
+		}
+	}
 }
 
 void loop() {
-  sendSensorData();
-  checkReceivedCommand();
-}
+  static int i = 0;
+  
+  // read data/commands from PI	
+	readData();
 
-void checkReceivedCommand(){
-  cmd_t command = {};
-  String lineInput = "";
-  while(Serial.available()) {
-    
-    lineInput = Serial.readString();// read the incoming data as string
-    Serial.println(lineInput);
-    command = parseCommand(lineInput);
-    
-    if(command.type == "drive"){
-      int intaWheelSpeed[2] = {command.drive_cmd.left, command.drive_cmd.right};
-      driveWheels(intaWheelSpeed);
-    }
-    else if(command.type == "stop"){
-      stopWheels();
-    }
-    else if(command.type == "scoop"){
-      angleScoop(command.scoop_cmd.orientation);
-    }
+	// read sensors
+	encoder_t		      wheel_enc	 	    = robot.readWheelEncoders();
+	line_sensors_t		line_sensors	  	= robot.readLineSensors();
+	//int16_t           object_distance = robot.readUltraSound();;
+
+  
+  if (millis() >= pingTimerUltra) {   // pingSpeed milliseconds since last ping, do another ping.
+    pingTimerUltra += pingSpeed;      // Set the next ping time.
+    sonar.ping_timer(echoCheck); // Send out the ping, calls "echoCheck" function every 24uS where you can check the ping status.
   }
-}
 
-void sendSensorData(){
-  // Send wheel encoder values over the channel
-  int encoder[2] = {0};
-  getEncoderValues(encoder);
-  String str = String(String(encoder[0]) + "," + String(encoder[1]));
-  Serial.print("ALL,");
-  Serial.print(str);
+  //Serial.println("AVG right: " + String(avgSpeedWheel[0]) + "\t AVG right: " + String(avgSpeedWheel[1]));
+	//Serial.println(object_distance);
+	// update controller
+  calcAvgSpeed();
+	encoder_t speeds = controller.update(wheel_enc, line_sensors, object_distance, avgSpeedWheel);
+  
+ 
+	//if(i++ >= 1000){
+		//Serial.println("distance: " + String(object_distance) + " Left speed: " + String(speeds.left) + " right speed: " + String(speeds.right));
+		//i = 0;
+	//}
+	// update hardware
+	robot.setMotorSpeed(speeds.left, speeds.right);
 
-  // Send IR values over the channel
-  int irValues[3] = {0};
-  getIRvalues(irValues);
-  str = String(","  + String(irValues[0]) + "," + String(irValues[1]) + "," + String(irValues[2]));
-  Serial.println(str);
-}
-
-void getEncoderValues(int r[2]){
-  // saves the encoder values into the array of the arugment r[0]=LeftWheel   r[1]=RightWheel
-  r[0] = encoder.getTicks(LEFT);
-  r[1] = encoder.getTicks(RIGHT);
-}
-
-void getIRvalues(int r[3]){
-  // saves the IR values into the array of the arugment r[0]=LeftIR   r[1]=MiddleIR   r[2]=RightIR
-  r[0] = IRSensor0.read();
-  r[1] = IRSensor1.read();
-  r[2] = IRSensor2.read();
-}
-
-void driveWheels(int v[2]){
-  // v[0] = leftWheel     v[1] = rightWheel
-  leftWheel(v[0]);
-  rightWheel(v[1]);
-}
-
-void stopWheels(){
-  leftWheelBreak();
-  rightWheelBreak();
-}
-
-void leftWheel(int motorPower){
-    motorPower = constrain(motorPower, -255, 255);   // constrain motorPower to -255 to +255
-    if(motorPower <= 0){ // spin CCW
-        digitalWrite(L_CTRL1, HIGH);
-        digitalWrite(L_CTRL2, LOW);
-        analogWrite(L_PWM, abs(motorPower));
-    }
-    else{ // spin CW
-        digitalWrite(L_CTRL1, LOW);
-        digitalWrite(L_CTRL2, HIGH);
-        analogWrite(L_PWM, abs(motorPower));
-    }
-}
-
-void rightWheel(int motorPower){
-    motorPower = constrain(motorPower, -255, 255);   // constrain motorPower to -255 to +255
-    if(motorPower <= 0){  // spin CCW
-        digitalWrite(R_CTRL1, HIGH);
-        digitalWrite(R_CTRL2, LOW);
-        analogWrite(R_PWM, abs(motorPower));
-    }
-    else{ // spin CW
-        digitalWrite(R_CTRL1, LOW);
-        digitalWrite(R_CTRL2, HIGH);
-        analogWrite(R_PWM, abs(motorPower));
-    }
-}
-
-void leftWheelBreak(){
-    // setting both controls HIGH, shorts the motor out -- causing it to self brake.
-    digitalWrite(L_CTRL1, HIGH);
-    digitalWrite(L_CTRL2, HIGH);
-    analogWrite(L_PWM, 0);
-}
-
-void rightWheelBreak(){  
-    // setting both controls HIGH, shorts the motor out -- causing it to self brake.
-    digitalWrite(L_CTRL1, HIGH);
-    digitalWrite(L_CTRL2, HIGH);
-    analogWrite(R_PWM, 0);
-}
-
-void angleScoop(int postionOtherRobots){
-  // 0 = left   1 = right  2 = both 
-  // 180° closes    30° open
-  switch (postionOtherRobots){
-    case 0: // other robot is on the left side
-      servoRight.write(30);  
-      servoLeft.write(0);
-      break;
-    case 1: // other robot is on the right side
-      servoRight.write(180);  
-      servoLeft.write(150);
-      break;
-    case 2: // robots on both sides
-      servoRight.write(180);  
-      servoLeft.write(0);
-      break;
-    default:
-      break;
+  //update the speedMemory array with the nex values
+  if(i == 119){
+    i = 0;
   }
+  speedMemory[i][0] = speeds.right;
+  speedMemory[i][1] = speeds.left;
+  i++;
+  
+	// send heartbeat to python
+	//heart_beat.update(object_distance);
 }
-
-cmd_t parseCommand(String line)
-{
-      int i;
-      int index = 0;
-      cmd_t tmp = {};
-      // first read the op
-      i = line.indexOf(',');
-      tmp.type = line.substring(0,i);
-      line = line.substring(i+1);
-      
-      // read and parse all arguments
-      while((i = line.indexOf(',')) >= 0)
-      {
-        String arg = line.substring(0,i);
-        
-        tmp.args[index++] = arg.toInt();
-        line = line.substring(i+1);
-      }
-      tmp.args[index++] = line.toInt();
-      tmp.numberOfArgs = index;
-      index = 0;
-      return tmp;
-}
-
-
 

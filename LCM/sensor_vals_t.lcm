@@ -6,8 +6,16 @@ struct encoder_values_t
     int64_t right;
 }
 
+struct line_sensors_t
+{
+    int16_t left;
+    int16_t middle;
+    int16_t right;
+}
+
 struct sensor_vals_t
 {
     int64_t  timestamp; 
     encoder_values_t  wheel_encoders;
+    line_sensors_t    line_sensors;
 }

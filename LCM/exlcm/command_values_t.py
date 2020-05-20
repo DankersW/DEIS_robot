@@ -23,7 +23,7 @@ class command_values_t(object):
         return buf.getvalue()
 
     def _encode_one(self, buf):
-        buf.write(struct.pack(">bb", self.left, self.right))
+        buf.write(struct.pack(">hh", self.left, self.right))
 
     def decode(data):
         if hasattr(data, 'read'):
@@ -37,14 +37,14 @@ class command_values_t(object):
 
     def _decode_one(buf):
         self = command_values_t()
-        self.left, self.right = struct.unpack(">bb", buf.read(2))
+        self.left, self.right = struct.unpack(">hh", buf.read(4))
         return self
     _decode_one = staticmethod(_decode_one)
 
     _hash = None
     def _get_hash_recursive(parents):
         if command_values_t in parents: return 0
-        tmphash = (0x7706dfb213dd896e) & 0xffffffffffffffff
+        tmphash = (0x582d2d07d2cc0d84) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff)  + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)

@@ -7,3 +7,4 @@ from .command_values_t import command_values_t
 from .wheel_speeds_t import wheel_speeds_t
 from .encoder_values_t import encoder_values_t
 from .sensor_vals_t import sensor_vals_t
+from .line_sensors_t import line_sensors_t
